@@ -1,0 +1,535 @@
+<!-- FIREFLY EXPERIENCE START -->
+<div id="firefly-walk">
+ <div class="viz-controls toolbar">
+  <button class="btn icon-btn" type="button" data-sky aria-label="Dusk. Switch to night" title="Dusk · switch to night">
+   <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+    <g data-sky-icon="evening"><circle cx="12" cy="12" r="4"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/></g>
+    <g data-sky-icon="night" hidden><circle cx="12" cy="12" r="8"/><path fill="currentColor" d="M12 4a8 8 0 0 1 0 16Z"/></g>
+    <circle data-sky-icon="fullMoon" hidden cx="12" cy="12" r="8" fill="currentColor"/>
+    <g data-sky-icon="dawn" hidden><path d="M3 19h18M7 15a5 5 0 0 1 10 0M12 3v4M10 5l2-2 2 2"/></g>
+   </svg>
+  </button>
+  <button class="btn icon-btn" type="button" data-door title="Open café door" aria-label="Open café door" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 22V3h14v19M2 22h20"/><circle cx="15" cy="13" r=".8"/></svg></button>
+  <button class="btn icon-btn" type="button" data-curtains aria-label="Close café curtains" title="Close café curtains" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h18M5 4v15l5-1V4m9 0v15l-5-1V4M3 20h8m2 0h8"/></svg></button>
+  <button class="btn icon-btn" type="button" data-stairs aria-label="Go upstairs" title="Go upstairs"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 20h5v-5h5v-5h5V5h3"/></svg></button>
+  <button class="btn icon-btn" type="button" data-watch aria-label="Enter outdoor cinema" title="Enter outdoor cinema" aria-pressed="false"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14m10-14v14M3 10h4m-4 4h4m10-4h4m-4 4h4"/></svg></button>
+
+  <button class="btn icon-btn" type="button" data-calendar-toggle aria-label="Calendar and weather" title="Calendar and weather" aria-expanded="false" aria-controls="calendar-panel"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v5m8-5v5m-8 6h2m4 0h2m-8 3h2"/></svg></button>
+  <button class="btn icon-btn" type="button" data-room-toggle aria-expanded="false" aria-controls="room-panel" aria-label="Invite a friend" title="Invite a friend"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="9" cy="7" r="3"/><path d="M3 19v-2a6 6 0 0 1 12 0v2m1-14a3 3 0 0 1 0 6m2 3a4 4 0 0 1 3 4v1"/></svg></button>
+  <span data-room-count aria-live="polite" hidden></span>
+ </div>
+ <div class="landscape" role="img" aria-label="First-person pastel meadow, woodland, stream and waterfall with flying beetles"><canvas aria-label="Interactive first-person landscape"></canvas></div>
+ <div class="viz-controls toolbar destinations"><button type="button" class="btn icon-btn" data-action="walk" aria-pressed="false" aria-label="Start walking" title="Start walking"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="m7 22 4-7 3 2 2 5m-5-7 1-7m-5 5 5-5 4 4h3"/></svg></button><button type="button" class="btn icon-btn" data-action="cafe" aria-label="Book café" title="Book café"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zm13 1h2a2 2 0 0 1 0 4h-2M3 22h16M8 7V3m5 4V3"/></svg></button><button type="button" class="btn icon-btn" data-action="desk" aria-pressed="false" aria-label="WFH desk" title="WFH desk"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="10" rx="1"/><path d="M5 14l-3 5h20l-3-5M9 17h6"/></svg></button><button type="button" class="btn icon-btn" data-action="closeup" aria-label="Meet a firefly" title="Meet a firefly"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="14" rx="3" ry="6"/><path d="M10 9 8 5m6 4 2-4m-7 7C1 4 1 18 9 16m6-4c8-8 8 6 0 4m-5 2h4"/></svg></button><label class="form-check"><input class="form-check-input" type="checkbox" data-quiet><span class="form-check-label">Still scene</span></label><span data-area aria-live="polite">Meadow</span></div>
+ <div class="viz-controls toolbar sound"><button type="button" class="btn icon-btn" data-water-sound aria-pressed="true" aria-label="Water sound" title="Water sound"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7c3-4 5 4 10 0s7 4 10 0M2 12c3-4 5 4 10 0s7 4 10 0M2 17c3-4 5 4 10 0s7 4 10 0"/></svg></button><button type="button" class="btn icon-btn" data-music-toggle aria-expanded="false" aria-label="Sound mixer" title="Sound mixer"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17V5l11-2v12M9 9l11-2"/><ellipse cx="6" cy="17" rx="3" ry="2"/><ellipse cx="17" cy="15" rx="3" ry="2"/></svg></button></div><div data-focus hidden><div class="viz-controls"><span data-phase>Focus</span><output data-clock class="tabular-nums">25:00</output><button class="btn" data-timer>Start timer</button><button class="btn" data-reset>Reset</button></div><p data-focus-status aria-live="polite" class="text-small">25-minute work · 5-minute break</p></div>
+ <p class="text-small walking-help">Space to walk / pause · WASD / arrows to move · drag to look · Esc to pause <span aria-hidden="true">·</span> <span data-season></span></p>
+ <details data-mixer><summary>Sound mixer</summary>
+  <label class="form-label">Water <input type="range" data-level="water" min="0" max="100" value="65"></label>
+  <label class="form-label">Rain <input type="range" data-level="rain" min="0" max="100" value="45"></label>
+  <label class="form-label">Crickets and woodland <input type="range" data-level="woodland" min="0" max="100" value="30"></label>
+  <label class="form-label">Music <input type="range" data-level="music" min="0" max="100" value="35"></label>
+  <label class="form-label">Choose a song <input class="form-control" type="file" accept="audio/*" data-music></label>
+  <audio controls loop aria-label="Your background music"></audio>
+ </details>
+ <section id="calendar-panel" data-calendar-panel hidden aria-labelledby="calendar-heading">
+  <h2 id="calendar-heading">Calendar and weather</h2>
+  <label class="form-label">Month <select data-calendar-month>
+   <option value="0">Live calendar · India time</option>
+   <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+   <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+   <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+   <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+  </select></label>
+  <label class="form-label">Weather <select data-calendar-weather>
+   <option value="clear">Clear</option><option value="rain">Rain</option><option value="snow">Snow</option><option value="mist">Mist</option>
+  </select></label>
+ </section>
+ <section id="room-panel" data-room-panel hidden aria-labelledby="room-heading">
+  <header><h2 id="room-heading">Visit together</h2></header>
+  <p class="text-small" data-room-status role="status"></p>
+  <div data-room-entrance>
+   <form data-room-form>
+    <label class="form-label">Your name <input class="form-control" data-room-name maxlength="28" autocomplete="nickname"></label>
+    <button class="btn" type="submit" data-room-join>Create room</button>
+   </form>
+  </div>
+  <div data-room-live hidden>
+   <label class="form-label">Invite link <input class="form-control" data-room-invite readonly></label>
+   <button class="btn" type="button" data-room-copy>Copy link</button>
+   <ul data-room-roster aria-label="People here"></ul>
+   <div data-room-host hidden>
+    <button class="btn" type="button" data-room-cinema>Open projector</button>
+    <form data-room-source-form>
+     <label class="form-label">Video URL or local media path <input class="form-control" data-room-source placeholder="/media/movie.mp4" maxlength="1500" required></label>
+     <button class="btn" type="submit">Set video</button>
+    </form>
+    <div data-room-media hidden>
+     <button class="btn" type="button" data-room-play disabled>Play for everyone</button>
+     <form data-room-seek-form>
+      <label>Seek <input type="number" data-room-seek min="0" step="0.1" value="0" disabled> seconds</label>
+      <button class="btn" type="submit">Go</button>
+     </form>
+    </div>
+   </div>
+   <div class="viz-controls room-actions">
+    <button class="btn" type="button" data-room-view disabled>Watch from cinema</button>
+    <button class="btn" type="button" data-room-enable disabled>Enable playback</button>
+    <button class="btn" type="button" data-room-leave>Leave room</button>
+   </div>
+  </div>
+ </section>
+ <section data-cinema-controls hidden aria-label="Outdoor cinema controls">
+  <div class="viz-controls">
+   <label class="btn cinema-file-label" data-solo-movie>Choose video<input type="file" accept="video/*,.mp4,.webm,.m4v,.mov" data-cinema-file aria-label="Choose video"></label>
+   <button class="btn" type="button" data-cinema-play hidden>Play</button>
+   <button class="btn" type="button" data-cinema-seat="0" aria-pressed="false">Left couch</button>
+   <button class="btn" type="button" data-cinema-seat="1" aria-pressed="false">Right couch</button>
+  </div>
+  <input type="range" data-cinema-seek aria-label="Movie position" min="0" max="1" step=".1" value="0" hidden>
+  <p class="text-small" data-cinema-status role="status" hidden></p>
+ </section>
+ <div data-cinema-fade aria-hidden="true"></div>
+ <dialog data-book-paper aria-labelledby="book-title">
+  <form method="dialog"><button class="btn" type="submit" aria-label="Close book note">×</button></form>
+  <p class="book-kicker">Little Stream Book Café</p>
+  <h2 id="book-title"></h2>
+  <p data-book-author hidden></p>
+ </dialog>
+ <div data-book-pick hidden>
+  <label>Browse books <select data-book-list><option value="">Choose a book</option></select></label>
+ </div>
+ <div data-detail hidden><div class="insect-view"><canvas aria-label="Close-up of a six-legged firefly with antennae, wings and a glowing abdomen"></canvas></div><button class="btn" data-action="back">Back to the path</button></div>
+ <p data-error role="alert" hidden></p>
+</div>
+<style>
+#firefly-walk { position:relative; isolation:isolate; height:100vh; height:100dvh; overflow:hidden; color:var(--foreground); }
+#firefly-walk .landscape { position:absolute; inset:0; z-index:-1; }
+#firefly-walk canvas { display:block; width:100%; height:100%; touch-action:none; cursor:grab; }
+#firefly-walk canvas:active { cursor:grabbing; }
+#firefly-walk .toolbar { position:absolute; gap:2px; }
+#firefly-walk .toolbar:first-child { top:10px; left:12px; }
+#firefly-walk .destinations { bottom:32px; left:12px; max-width:calc(100% - 24px); box-sizing:border-box; }
+#firefly-walk .sound { top:10px; right:12px; }
+#firefly-walk .icon-btn { display:grid; place-items:center; padding:0; width:32px; height:32px; min-height:0; border:0; border-radius:50%; background:transparent; color:#fcf7ee; opacity:.78; }
+#firefly-walk .icon-btn svg { width:16px; height:16px; filter:drop-shadow(0 1px 2px #121724); }
+#firefly-walk .icon-btn[aria-pressed="true"] { color:#ffe6b8; opacity:1; }
+#firefly-walk .icon-btn:hover { background:#171d2833; opacity:1; }
+#firefly-walk .walking-help { position:absolute; bottom:10px; left:18px; margin:0; text-shadow:0 1px 3px #121724,0 0 6px #121724; }
+#firefly-walk .destinations label, #firefly-walk [data-area] { margin-left:6px; text-shadow:0 1px 3px #121724,0 0 6px #121724; }
+@media(pointer:coarse) { #firefly-walk .icon-btn { width:44px; height:44px; } }
+#firefly-walk details, #firefly-walk [data-focus], #firefly-walk [data-detail], #firefly-walk [data-error] { position:absolute; background:#171d28f2; border-radius:12px; padding:12px; }
+#firefly-walk details { top:51px; right:12px; max-width:calc(100% - 48px); }
+#firefly-walk details:not([open]) { background:transparent; padding:3px 5px; font-size:12px; text-shadow:0 1px 3px #121724,0 0 6px #121724; }
+#firefly-walk [data-cinema-fade] { position:absolute; inset:0; z-index:3; background:#0a0d18; opacity:0; pointer-events:none; }
+#firefly-walk [data-focus] { bottom:115px; left:12px; max-width:calc(100% - 48px); }
+#firefly-walk [data-detail] { top:50%; left:50%; transform:translate(-50%,-50%); width:min(420px,calc(100% - 60px)); }
+#firefly-walk .insect-view { height:min(300px,40dvh); }
+#firefly-walk audio { display:block; max-width:100%; margin-top:8px; }
+#firefly-walk [hidden] { display:none!important; }
+@media(pointer:coarse) { #firefly-walk details { top:61px; } }
+#firefly-walk [data-book-paper] { box-sizing:border-box; width:min(88vw,420px); margin:auto; border:1px solid #b4a184; padding:38px 32px 32px; color:#3d3028; background:repeating-linear-gradient(0deg,#f9efd8 0 27px,#eadfc7 28px,#f9efd8 29px); box-shadow:0 14px 50px #14152066; transform:rotate(-1.6deg); font-family:Georgia,serif; }
+#firefly-walk [data-book-paper][open] { animation:paper-in 230ms cubic-bezier(.2,.75,.25,1) both; }
+#firefly-walk [data-book-paper]::backdrop { background:#11152245; }
+#firefly-walk [data-book-paper] form { position:absolute; top:8px; right:8px; }
+#firefly-walk [data-book-paper] h2 { font-size:clamp(22px,4vw,32px); margin:16px 0; }
+#firefly-walk .book-kicker { font-size:12px; letter-spacing:.06em; }
+#firefly-walk [data-book-pick] { position:absolute; left:14px; bottom:82px; }
+#firefly-walk [data-book-pick] label { color:#fcf7ee; text-shadow:0 1px 4px #121724; }
+@keyframes paper-in { from { opacity:0; transform:translateY(9px) rotate(-4deg) scale(.97); } }
+@media(prefers-reduced-motion:reduce) { #firefly-walk [data-book-paper][open] { animation:none; } }
+#firefly-walk:has([data-quiet]:checked) [data-book-paper][open] { animation:none; }
+#firefly-walk [data-room-count] { font-size:12px; margin-inline:4px; text-shadow:0 1px 5px #151521; }
+#firefly-walk [data-room-panel] { position:absolute; z-index:2; top:55px; left:12px; width:min(360px,calc(100% - 24px)); box-sizing:border-box; max-height:calc(100dvh - 150px); overflow:auto; padding:16px; background:#171d28f2; border:1px solid #9890a150; border-radius:14px; }
+#firefly-walk [data-room-panel] h2 { margin:0; font:normal 23px Georgia,serif; }
+#firefly-walk [data-room-panel] form,#firefly-walk .room-actions { margin-top:10px; }
+#firefly-walk [data-room-panel] .form-control { width:100%; }
+#firefly-walk [data-room-panel] .btn { margin-top:5px; }
+#firefly-walk [data-room-roster] { list-style:none; padding:0; margin:12px 0; }
+#firefly-walk [data-room-roster] li { padding:4px 0; }
+#firefly-walk [data-room-roster] li::before { content:'•'; color:#b9caac; margin-right:7px; }
+#firefly-walk [data-room-seek] { width:68px; }
+@media(max-width:560px) {
+ #firefly-walk .toolbar:first-child { max-width:calc(100% - 24px); }
+ #firefly-walk .sound { top:53px; }
+ #firefly-walk [data-mixer] { top:96px; }
+ #firefly-walk [data-room-panel] { top:98px; }
+}
+#firefly-walk [data-calendar-panel] { position:absolute; z-index:2; top:55px; left:12px; width:min(270px,calc(100% - 24px)); box-sizing:border-box; padding:14px; background:#171d28f2; border:1px solid #9890a150; border-radius:14px; }
+#firefly-walk [data-calendar-panel] h2 { margin:0 0 12px; font:normal 21px Georgia,serif; }
+#firefly-walk [data-calendar-panel] label + label { margin-top:12px; }
+#firefly-walk [data-calendar-panel] select { font:inherit; min-height:30px; }
+#firefly-walk [data-cinema-controls] { position:absolute; bottom:84px; right:12px; z-index:1; display:grid; justify-items:end; gap:6px; width:min(390px,calc(100% - 24px)); }
+#firefly-walk [data-cinema-controls] .viz-controls { justify-content:flex-end; }
+#firefly-walk [data-cinema-controls] .btn { background:#171d28ed; }
+#firefly-walk [data-cinema-controls] .btn[aria-pressed=true] { background:#d8c49f; color:#22232b; }
+#firefly-walk .cinema-file-label { position:relative; cursor:pointer; }
+#firefly-walk .cinema-file-label input { position:absolute; inset:0; width:100%; opacity:0; cursor:pointer; }
+#firefly-walk .cinema-file-label:focus-within { outline:2px solid #f5ddaa; }
+#firefly-walk [data-cinema-seek] { width:min(210px,95%); accent-color:#d8c49f; }
+#firefly-walk [data-cinema-status] { margin:0; padding:5px 8px; border-radius:5px; background:#171d28ed; }
+</style>
+<script type="module">
+import * as T from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
+__WORLD__
+__TIMER__
+__ROOM__
+__RIVE__
+const root=document.getElementById('firefly-walk'),$=s=>root.querySelector(s),canvas=$('.landscape canvas'),error=$('[data-error]');
+try{
+const renderer=new T.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1;
+const textures={},loader=new T.TextureLoader(),assets=__ASSETS__;
+await Promise.all(Object.entries(assets).map(async([key,url])=>{const tx=await loader.loadAsync(url);tx.colorSpace=T.SRGBColorSpace;tx.wrapS=tx.wrapT=T.RepeatWrapping;tx.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());if(key==='ground')tx.repeat.set(35,45);textures[key]=tx;}));
+const world=createWorld(T,textures),camera=new T.PerspectiveCamera(62,1,.04,220);camera.rotation.order='YXZ';camera.position.set(pathAt(3),heightAt(pathAt(3),3)+1.65,3);
+let riveElements=null;addRiveElements(T,world,heightAt,pathAt,__RIV__).then(r=>{riveElements=r;}).catch(e=>console.warn('Rive elements skipped:',e));
+let yaw=0,pitch=0,walking=false,detail=false,drag=null,elapsed=0,last=performance.now(),musicURL=null;const keys=new Set(),reduced=matchMedia('(prefers-reduced-motion: reduce)');$('[data-quiet]').checked=reduced.matches;
+function persist(){window.openai?.setWidgetState?.({modelContent:{time:sky,area:$('[data-area]').textContent},privateContent:{position:camera.position.toArray(),yaw,pitch}})?.catch(()=>{});}
+function restore(state){const m=state?.modelContent,p=state?.privateContent;if(m&&skies.includes(m.time))selectTime(m.time,true);if(p?.position?.length===3&&p.position.every(Number.isFinite)){camera.position.copy(world.move(new T.Vector3(p.position[0],0,p.position[2]),0,0));yaw=Number.isFinite(p.yaw)?p.yaw:0;pitch=Math.max(-1.1,Math.min(1.1,p.pitch||0));}}
+const skies=['evening','night','fullMoon','dawn'];
+const skyLabels={evening:'Dusk',night:'Half-moon night',fullMoon:'Full moon night',dawn:'Blue hour'};
+let sky='evening',room;
+function selectTime(name,instant=false){
+ sky=skies.includes(name)?name:'evening';
+ world.setTime(sky,instant||reduced.matches);
+ if(sky!=='night'&&sky!=='fullMoon')localFilm.pause();
+ const next=skies[(skies.indexOf(sky)+1)%skies.length];
+ const label=skyLabels[sky]+' · switch to '+skyLabels[next].toLowerCase();
+ $('[data-sky]').title=label;$('[data-sky]').setAttribute('aria-label',label);
+ root.querySelectorAll('[data-sky-icon]').forEach(icon=>icon.toggleAttribute('hidden',icon.dataset.skyIcon!==sky));
+
+ updateSound();
+}
+function labelIcon(control,label,pressed){control.title=label;control.setAttribute("aria-label",label);control.setAttribute("aria-pressed",String(pressed));}
+function stop(){walking=false;keys.clear();drag=null;labelIcon($('[data-action="walk"]'),"Resume walking", false);}
+$('[data-sky]').onclick=()=>{
+ const next=skies[(skies.indexOf(sky)+1)%skies.length];
+ if(!room?.changeSky(next)){selectTime(next);persist();}
+};
+$('[data-door]').onclick=()=>{
+ const open=world.toggleDoor();labelIcon($('[data-door]'),open?'Close café door':'Open café door',open);
+};
+$('[data-curtains]').onclick=()=>{
+ const closed=world.toggleCurtains();
+ labelIcon($('[data-curtains]'),closed?'Open café curtains':'Close café curtains',closed);
+};
+let atDesk=false;
+const timer=createFocusTimer();let soundOn=true,audioContext,riverGain,woodlandGain,musicGain,rainGain,roofRainGain;
+const level=name=>Number($(`[data-level="${name}"]`).value)/100;
+function initSound(){
+ if(!audioContext){
+  audioContext=new (window.AudioContext||window.webkitAudioContext)();
+  const buffer=audioContext.createBuffer(1,audioContext.sampleRate*4,audioContext.sampleRate),data=buffer.getChannelData(0);let smooth=0;
+  for(let i=0;i<data.length;i++){smooth=(smooth+Math.random()*.08-.04)/1.02;data[i]=smooth*3;}
+  const noise=audioContext.createBufferSource();noise.buffer=buffer;noise.loop=true;const filter=audioContext.createBiquadFilter();filter.type='lowpass';filter.frequency.value=1700;riverGain=audioContext.createGain();riverGain.gain.value=0;noise.connect(filter).connect(riverGain).connect(audioContext.destination);noise.start();
+  const woodland=audioContext.createBuffer(1,audioContext.sampleRate*8,audioContext.sampleRate);
+  const samples=woodland.getChannelData(0);
+  let breeze=0;
+  for(let i=0;i<samples.length;i++){
+   const t=i/audioContext.sampleRate;
+   breeze=(breeze+(Math.random()-.5)*.025)*.98;
+   const phase=t%2, chirp=phase% .14;
+   const envelope=phase>.22&&phase<.78&&chirp<.066?Math.sin(Math.PI*chirp/.066)**2:0;
+   samples[i]=breeze*.4+envelope*.12*Math.sin(2*Math.PI*(3300*t+12*Math.sin(t*.8)));
+  }
+  const insects=audioContext.createBufferSource();insects.buffer=woodland;insects.loop=true;
+  woodlandGain=audioContext.createGain();woodlandGain.gain.value=0;
+  insects.connect(woodlandGain).connect(audioContext.destination);insects.start();
+  // Separate diffuse rain and low roof taps, mixed by distance to shelter.
+  const rainBuffer=audioContext.createBuffer(1,audioContext.sampleRate*8,audioContext.sampleRate),rainSamples=rainBuffer.getChannelData(0);
+  let rainSmooth=0,tap=0;
+  for(let i=0;i<rainSamples.length;i++){
+   const white=Math.random()*2-1;rainSmooth=rainSmooth*.85+white*.15;
+   if(Math.random()<.0008)tap=.25+Math.random()*.4;
+   tap*=.994;rainSamples[i]=white*.19+rainSmooth*.35+tap*Math.sin(i*.7)*.3;
+  }
+  const shower=audioContext.createBufferSource();shower.buffer=rainBuffer;shower.loop=true;
+  const rainFilter=audioContext.createBiquadFilter();rainFilter.type='lowpass';rainFilter.frequency.value=4500;
+  rainGain=audioContext.createGain();rainGain.gain.value=0;shower.connect(rainFilter).connect(rainGain).connect(audioContext.destination);
+  const roofFilter=audioContext.createBiquadFilter();roofFilter.type='bandpass';roofFilter.frequency.value=520;roofFilter.Q.value=.7;
+  roofRainGain=audioContext.createGain();roofRainGain.gain.value=0;shower.connect(roofFilter).connect(roofRainGain).connect(audioContext.destination);shower.start();
+  musicGain=audioContext.createGain();musicGain.gain.value=0;musicGain.connect(audioContext.destination);
+  for(const [i,hz] of [130.81,164.81,196,261.63].entries()){const o=audioContext.createOscillator(),g=audioContext.createGain();o.type='sine';o.frequency.value=hz;g.gain.value=.035;const lfo=audioContext.createOscillator(),amount=audioContext.createGain();lfo.frequency.value=.04+i*.011;amount.gain.value=.012;lfo.connect(amount).connect(g.gain);o.connect(g).connect(musicGain);o.start();lfo.start();}
+ }
+ audioContext.resume().catch(()=>{});
+}
+function updateSound(){if(!audioContext)return;const x=7+1.6*Math.sin(camera.position.z*.12),distance=Math.hypot(camera.position.x-x,Math.max(0,camera.position.z+25));riverGain.gain.setTargetAtTime(soundOn?level('water')*Math.max(.015,.32/(1+distance*.13)):0,audioContext.currentTime,.25);
+ woodlandGain.gain.setTargetAtTime(level('woodland')*(.18+world.night*.24)*(1-world.rainIntensity*.65),audioContext.currentTime,.25);
+ const nearCafe=Math.max(0,1-Math.hypot(camera.position.x-world.hut.position.x,camera.position.z-world.hut.position.z)/8);
+ rainGain.gain.setTargetAtTime(level('rain')*world.rainIntensity*(.32-nearCafe*.10),audioContext.currentTime,.55);
+ roofRainGain.gain.setTargetAtTime(level('rain')*world.rainIntensity*nearCafe*.65,audioContext.currentTime,.55);
+}
+function syncMusic(){if(!audioContext)return;const audio=$('audio'),play=atDesk&&timer.running&&timer.phase==='work';musicGain.gain.setTargetAtTime(play&&!musicURL ? level('music') :0,audioContext.currentTime,.3);audio.volume=level('music');if(musicURL){if(play)audio.play().catch(()=>{});else audio.pause();}}
+function renderTimer(){const seconds=Math.ceil(timer.remaining);$('[data-clock]').textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');$('[data-phase]').textContent=timer.phase==='work'?'Focus':'Break';$('[data-timer]').textContent=timer.running?'Pause timer':'Start timer';}
+function workView(sitting){$('[data-focus]').hidden=!sitting;if(sitting){initSound();timer.start(performance.now());}else timer.pause(performance.now());renderTimer();syncMusic();}
+$('[data-timer]').onclick=()=>{initSound();if(timer.running)timer.pause(performance.now());else timer.start(performance.now());renderTimer();syncMusic();};$('[data-reset]').onclick=()=>{timer.reset();renderTimer();syncMusic();};
+$('[data-water-sound]').onclick=()=>{initSound();soundOn=!soundOn;$('[data-water-sound]').setAttribute('aria-pressed',String(soundOn));updateSound();};
+$('[data-music-toggle]').onclick=()=>{initSound();$('[data-mixer]').open=!$('[data-mixer]').open;$('[data-music-toggle]').setAttribute('aria-expanded',String($('[data-mixer]').open));};
+document.addEventListener('visibilitychange',()=>{if(document.hidden){audioContext?.suspend();}else if(audioContext&&atDesk){audioContext.resume().catch(()=>{});syncMusic();}});
+$('[data-mixer]').addEventListener('toggle',()=>$('[data-music-toggle]').setAttribute('aria-expanded',String($('[data-mixer]').open)));
+root.querySelectorAll('[data-level]').forEach(slider=>slider.addEventListener('input',()=>{initSound();updateSound();syncMusic();}));
+let cinemaView=false;
+let previousView;
+const cinemaControls=$('[data-cinema-controls]');
+const localFilm=document.createElement('video');
+localFilm.playsInline=true;localFilm.preload='metadata';
+const filmCanvas=document.createElement('canvas');filmCanvas.width=960;filmCanvas.height=540;
+const filmContext=filmCanvas.getContext('2d',{alpha:false});
+const filmTexture=new T.CanvasTexture(filmCanvas);filmTexture.colorSpace=T.SRGBColorSpace;
+const filmPlay=$('[data-cinema-play]'),filmSeek=$('[data-cinema-seek]'),filmStatus=$('[data-cinema-status]');
+const screenMaterial=world.movieScreen.material,blankCloth=screenMaterial.color.clone();
+let localFilmURL='',lastFilmTime=-1,seatIndex=-1;
+function aimCinema(){
+ const aim=new T.Vector3(world.cinema.position.x,world.cinema.position.y+1.61,world.cinema.position.z).sub(camera.position);
+ yaw=Math.atan2(-aim.x,-aim.z);pitch=Math.atan2(aim.y,Math.hypot(aim.x,aim.z));
+}
+function sitAtCinema(index){
+ seatIndex=index;stop();camera.position.copy(world.cinemaSeats[index]);
+ aimCinema();
+ root.querySelectorAll('[data-cinema-seat]').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.cinemaSeat)===index)));
+}
+root.querySelectorAll('[data-cinema-seat]').forEach(button=>{button.onclick=()=>sitAtCinema(Number(button.dataset.cinemaSeat));});
+function filmMessage(message){
+ filmStatus.textContent=message;filmStatus.hidden=!message;
+}
+function drawFilm(){
+ if(localFilm.readyState<2||!localFilm.videoWidth||lastFilmTime===localFilm.currentTime)return;
+ lastFilmTime=localFilm.currentTime;
+ const ratio=Math.min(960/localFilm.videoWidth,540/localFilm.videoHeight);
+ const width=localFilm.videoWidth*ratio,height=localFilm.videoHeight*ratio;
+ filmContext.fillStyle='#17151a';filmContext.fillRect(0,0,960,540);
+ filmContext.drawImage(localFilm,(960-width)/2,(540-height)/2,width,height);
+ filmTexture.needsUpdate=true;
+}
+function showFilm(){
+ drawFilm();
+ screenMaterial.map=screenMaterial.emissiveMap=filmTexture;
+ screenMaterial.color.set(0xffffff);screenMaterial.needsUpdate=true;
+}
+function releaseFilmSurface(){
+ if(screenMaterial.map!==filmTexture)return;
+ screenMaterial.map=screenMaterial.emissiveMap=null;
+ screenMaterial.color.copy(blankCloth);screenMaterial.needsUpdate=true;
+}
+function syncCinemaFilm(){
+ const shared=Boolean(room?.active);
+ $('[data-solo-movie]').hidden=shared;
+ if(shared&&(!localFilm.paused||screenMaterial.map===filmTexture)){
+  localFilm.pause();releaseFilmSurface();filmMessage('');
+ }
+ filmPlay.hidden=shared||!localFilmURL;
+ filmSeek.hidden=shared||!(localFilmURL&&Number.isFinite(localFilm.duration));
+ if(!shared&&cinemaView&&screenMaterial.map===filmTexture)drawFilm();
+}
+async function playLocalFilm(){
+ if(!cinemaView||room?.active||!localFilmURL)return;
+ if(seatIndex<0)sitAtCinema(0);
+ if(world.mode!=='night'&&world.mode!=='fullMoon')selectTime('night');
+ filmMessage('');
+ try{await localFilm.play();}
+ catch(error){if(error.name!=='AbortError')filmMessage('Select Play to start, or try a browser-compatible MP4 or WebM.');}
+}
+$('[data-cinema-file]').onchange=e=>{
+ const file=e.target.files[0];if(!file||room?.active)return;
+ localFilm.pause();releaseFilmSurface();
+ if(localFilmURL)URL.revokeObjectURL(localFilmURL);
+ lastFilmTime=-1;localFilmURL=URL.createObjectURL(file);localFilm.src=localFilmURL;
+ syncCinemaFilm();filmMessage('Loading video…');e.target.value='';
+};
+localFilm.onloadeddata=()=>{if(!cinemaView||room?.active)return;showFilm();syncCinemaFilm();playLocalFilm();};
+localFilm.onloadedmetadata=()=>{if(Number.isFinite(localFilm.duration))filmSeek.max=localFilm.duration;};
+localFilm.ontimeupdate=()=>{if(document.activeElement!==filmSeek)filmSeek.value=localFilm.currentTime;};
+localFilm.onplay=()=>{if(!cinemaView||room?.active){localFilm.pause();return;}showFilm();filmPlay.textContent='Pause';};
+localFilm.onpause=localFilm.onended=()=>{filmPlay.textContent='Play';};
+localFilm.onerror=()=>{releaseFilmSurface();filmMessage('This video could not be opened. Try an MP4 or WebM.');};
+filmPlay.onclick=()=>localFilm.paused?playLocalFilm():localFilm.pause();
+filmSeek.oninput=()=>{if(Number.isFinite(localFilm.duration))localFilm.currentTime=Number(filmSeek.value);};
+document.addEventListener('visibilitychange',()=>{if(document.hidden)localFilm.pause();});
+function goToScreen(){
+ if(cinemaView)return;
+ if(atDesk)$('[data-action="desk"]').click();
+ if(detail)$('[data-action="back"]').click();
+ previousView={sky};
+ stop();cinemaView=true;cinemaControls.hidden=false;
+ seatIndex=-1;root.querySelectorAll('[data-cinema-seat]').forEach(button=>button.setAttribute('aria-pressed','false'));
+ syncCinemaFilm();
+ if(room?.active)room.requestCinema();
+ else{
+  if(world.mode!=='night'&&world.mode!=='fullMoon')selectTime('night');
+  world.setCinemaOpen(true);world.projectorBeam.visible=true;
+ }
+ camera.position.set(2.35,heightAt(2.35,-44.35)+1.59,-44.35);
+ aimCinema();
+ $('[data-book-pick]').hidden=true;
+ labelIcon($('[data-watch]'),'Return from outdoor cinema',true);
+}
+function leaveCinema(){
+ if(!cinemaView)return;
+ if(!room?.active){world.setCinemaOpen(false);world.projectorBeam.visible=false;}cinemaView=false;cinemaControls.hidden=true;localFilm.pause();releaseFilmSurface();
+ camera.position.set(-1.05,heightAt(-1.05,-37.6)+1.65,-37.6);yaw=.08;pitch=.04;
+ if(!room?.active)selectTime(previousView.sky);
+ labelIcon($('[data-watch]'),'Enter outdoor cinema',false);
+}
+let cinemaTransition=false;
+$('[data-watch]').onclick=async()=>{
+ if(cinemaTransition)return;
+ const switchView=cinemaView?leaveCinema:goToScreen;
+ if(reduced.matches||$('[data-quiet]').checked){switchView();return;}
+ cinemaTransition=true;
+ const veil=$('[data-cinema-fade]');
+ try{
+  await veil.animate([{opacity:0},{opacity:1}],{duration:170,easing:'ease-in',fill:'forwards'}).finished;
+  switchView();
+  const exit=veil.animate([{opacity:1},{opacity:0}],{duration:260,easing:'ease-out',fill:'forwards'});
+  await exit.finished;
+ }finally{
+  veil.getAnimations().forEach(animation=>animation.cancel());cinemaTransition=false;
+ }
+};
+setInterval(()=>{if(timer.tick(performance.now())){$('[data-focus-status]').textContent=timer.phase==='break'?'Work session complete. Start your five-minute break.':'Break complete. Ready for another work session.';syncMusic();}renderTimer();},500);
+
+$('[data-action="cafe"]').onclick=()=>{leaveCinema();stop();camera.position.set(-1.05,1.65,-37.6);yaw=.08;pitch=.04;atDesk=false;workView(false);labelIcon($('[data-action="desk"]'),"WFH desk", false);persist();};const returnPosition=new T.Vector3();$('[data-action="desk"]').onclick=()=>{leaveCinema();if(!atDesk){returnPosition.copy(camera.position);stop();camera.position.set(-1.45,1.35,-42.85);yaw=-Math.PI/2;pitch=0;atDesk=true;workView(true);labelIcon($('[data-action="desk"]'),"Back to path", true);}else{camera.position.copy(returnPosition);yaw=0;pitch=0;atDesk=false;workView(false);labelIcon($('[data-action="desk"]'),"WFH desk", false);}persist();};
+function startWalking(){
+ if(atDesk)$('[data-action="desk"]').click();
+ if(detail)$('[data-action="back"]').click();
+ initSound();
+ walking=true;keys.clear();
+ if(cinemaView&&seatIndex>=0){
+  seatIndex=-1;
+  camera.position.copy(world.move(camera.position,0,0));
+  root.querySelectorAll('[data-cinema-seat]').forEach(button=>button.setAttribute('aria-pressed','false'));
+ }
+ labelIcon($('[data-action="walk"]'),'Pause walking',true);
+}
+$('[data-action="walk"]').onclick=()=>{
+ if(walking)stop();else startWalking();
+ persist();
+};
+window.addEventListener('keydown',e=>{
+ if(e.key==='Escape'){
+  stop();
+  persist();return;
+ }
+ if(cinemaTransition||detail||paper.open||e.target?.closest?.('input, select, textarea, [contenteditable]'))return;
+ if(e.code==='Space'){
+  // Keep native keyboard activation on focused controls.
+  if(e.target?.closest?.('button, a, summary, [role="button"]'))return;
+  e.preventDefault();
+  if(!e.repeat){if(walking)stop();else startWalking();persist();}
+  return;
+ }
+ const key=e.key.toLowerCase();
+ if(!['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key))return;
+ if(!walking&&cinemaView)startWalking();
+ if(!walking)return;
+ e.preventDefault();keys.add(key);
+});
+window.addEventListener('keyup',e=>{keys.delete(e.key.toLowerCase());if(walking)persist();});window.addEventListener('blur',stop);document.addEventListener('visibilitychange',()=>{if(document.hidden){stop();$('audio').pause();}last=performance.now();});
+const paper=$('[data-book-paper]'),bookList=$('[data-book-list]'),bookPicker=$('[data-book-pick]');
+const stairButton=$('[data-stairs]');
+stairButton.onclick=()=>{
+ if(cinemaTransition)return;
+ leaveCinema();
+ if(atDesk)$('[data-action="desk"]').click();
+ if(detail)$('[data-action="back"]').click();
+ const upstairs=insideCafe()&&camera.position.y>world.hut.position.y+4.2;
+ camera.position.copy(upstairs?world.stairFoot:world.upstairsPosition);
+ yaw=upstairs?0:-1.70;pitch=upstairs?0:-.23;persist();
+};
+function insideCafe(){
+ const x=camera.position.x-world.hut.position.x,z=camera.position.z-world.hut.position.z;
+ const b=world.cafeBounds;return x>b.west+.02&&x<b.east-.02&&z>b.back+.02&&z<b.front-.02;
+}
+function inAttic(){return insideCafe()&&camera.position.y>world.hut.position.y+4.2;}
+function nearShelf(){
+ const target=world.shelfTarget.getWorldPosition(new T.Vector3());
+ const dx=camera.position.x-target.x,dz=camera.position.z-target.z;
+ return insideCafe()&&camera.position.y<world.hut.position.y+3&&Math.abs(dz)<1.7&&Math.abs(dx)<1.45;
+}
+
+for(const book of world.books){const option=new Option(book.userData.title,book.userData.title);bookList.add(option);}
+function openBook(title){
+ if(paper.open)return;
+ const entry=world.books.find(book=>book.userData.title===title)?.userData;
+ if(!entry)return;
+ stop();$('#book-title').textContent=title;
+ const author=$('[data-book-author]');author.textContent=entry.author;author.hidden=!entry.author;
+ paper.showModal();
+ initSound();
+ const length=Math.floor(audioContext.sampleRate*.27),buffer=audioContext.createBuffer(1,length,audioContext.sampleRate);
+ const samples=buffer.getChannelData(0);
+ for(let i=0;i<length;i++){const t=i/length;samples[i]=(Math.random()*2-1)*Math.sin(Math.PI*t)**2*(.55+.45*Math.sin(t*23)**2);}
+ const source=audioContext.createBufferSource();source.buffer=buffer;
+ const filter=audioContext.createBiquadFilter();filter.type='bandpass';filter.frequency.value=1750;
+ const gain=audioContext.createGain();gain.gain.value=.13;
+ source.connect(filter).connect(gain).connect(audioContext.destination);source.start();
+}
+bookList.onchange=()=>{if(bookList.value)openBook(bookList.value);bookList.value='';};
+paper.addEventListener('click',e=>{if(e.target===paper){const r=paper.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)paper.close();}});
+const raycaster=new T.Raycaster();canvas.addEventListener('click',e=>{const r=canvas.getBoundingClientRect();raycaster.setFromCamera(new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);if(cinemaView||paper.open)return;
+const hit=nearShelf()?raycaster.intersectObjects(world.books,true)[0]:undefined;
+if(hit&&hit.distance<2.2){
+ let book=hit.object;while(book&&!book.userData.title)book=book.parent;
+ if(book){bookPicker.hidden=false;openBook(book.userData.title);return;}
+}
+if(nearShelf()&&raycaster.intersectObject(world.shelfTarget).some(hit=>hit.distance<2.2)){
+ bookPicker.hidden=false;bookList.focus();return;
+}
+if(raycaster.intersectObject(world.cafeDoor,true).some(hit=>hit.distance<5)){$('[data-door]').click();return;}if(raycaster.intersectObject(world.musicPlayer,true).length){const audio=$('audio');$('[data-mixer]').open=true;if(audio.src){if(audio.paused)audio.play().catch(()=>{});else audio.pause();}else $('[data-music]').click();}});
+canvas.addEventListener('pointerdown',e=>{if(!walking&&!cinemaView&&!inAttic())return;drag={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);});canvas.addEventListener('pointermove',e=>{if(!drag)return;yaw-=(e.clientX-drag.x)*.003;pitch=Math.max(-1.1,Math.min(1.1,pitch-(e.clientY-drag.y)*.003));drag={x:e.clientX,y:e.clientY};});for(const name of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(name,()=>{drag=null;persist();});
+$('[data-music]').onchange=e=>{const file=e.target.files[0];if(!file)return;const audio=$('audio');audio.pause();if(musicURL)URL.revokeObjectURL(musicURL);musicURL=URL.createObjectURL(file);audio.src=musicURL;audio.volume=.35;syncMusic();};
+const bugScene=new T.Scene(),bug=createFirefly(T);bugScene.add(bug.group,new T.HemisphereLight(0xffebd4,0x64768c,2));const bugKey=new T.DirectionalLight(0xffe5bf,3);bugKey.position.set(-2,3,2);bugScene.add(bugKey);const bugCamera=new T.PerspectiveCamera(40,1,.001,10);bugCamera.position.set(.38,.32,.48);bugCamera.lookAt(0,0,-.02);const bugRenderer=new T.WebGLRenderer({canvas:$('.insect-view canvas'),alpha:true,antialias:true});bugRenderer.setPixelRatio(Math.min(devicePixelRatio,1.5));bugRenderer.outputColorSpace=T.SRGBColorSpace;
+$('[data-action="closeup"]').onclick=()=>{stop();detail=true;$('[data-detail]').hidden=false;resize();};$('[data-action="back"]').onclick=()=>{detail=false;$('[data-detail]').hidden=true;$('[data-action="walk"]').focus();};
+function resize(){const box=canvas.parentElement;renderer.setSize(box.clientWidth,box.clientHeight,false);camera.aspect=box.clientWidth/box.clientHeight;camera.updateProjectionMatrix();if(detail){const b=$('.insect-view');bugRenderer.setSize(b.clientWidth,b.clientHeight,false);bugCamera.aspect=b.clientWidth/b.clientHeight;bugCamera.updateProjectionMatrix();}}
+new ResizeObserver(resize).observe(root);restore(window.openai?.widgetState);window.addEventListener('openai:set_globals',e=>restore(e.detail?.globals?.widgetState));
+function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/1000,.05);last=now;if(document.hidden)return;const quiet=$('[data-quiet]').checked;if(!quiet&&!detail)elapsed+=dt;if(walking&&!detail){let f=Number(keys.has('w')||keys.has('arrowup'))-Number(keys.has('s')||keys.has('arrowdown')),s=Number(keys.has('d')||keys.has('arrowright'))-Number(keys.has('a')||keys.has('arrowleft'));const l=Math.hypot(f,s)||1;f/=l;s/=l;camera.position.copy(world.move(camera.position,(s*Math.cos(yaw)-f*Math.sin(yaw))*dt*2.1,(-f*Math.cos(yaw)-s*Math.sin(yaw))*dt*2.1));}camera.rotation.set(pitch,yaw,0);
+ if(!nearShelf()&&!bookPicker.hidden)bookPicker.hidden=true;
+ const stairsLabel=insideCafe()&&camera.position.y>world.hut.position.y+4.2?'Go downstairs':'Go upstairs';
+ if(stairButton.title!==stairsLabel){
+  stairButton.title=stairsLabel;stairButton.setAttribute('aria-label',stairsLabel);
+ }
+ if(cinemaView)syncCinemaFilm();updateSound();room?.advance(dt);world.advance(elapsed,dt,quiet);if(!quiet)riveElements?.advance(dt);const area=cinemaView?"":camera.position.y>world.hut.position.y+4.3?"Attic":areaAt(camera.position.z);if($('[data-area]').textContent!==area)$('[data-area]').textContent=area;renderer.render(world.scene,camera);if(detail){bug.animate(elapsed,0,quiet);bugRenderer.render(bugScene,bugCamera);}}
+const monthPicker=$('[data-calendar-month]'),weatherPicker=$('[data-calendar-weather]');
+const calendarPanel=$('[data-calendar-panel]'),calendarToggle=$('[data-calendar-toggle]');
+// Opens in April: spring and purple lavender fields. 0 would follow the live calendar.
+let calendarMonth=4,weatherChoice='clear';
+function setCalendarSeason(name,month=calendarMonth,weather=weatherChoice){
+ calendarMonth=month;weatherChoice=weather;
+ world.setMonth(month||monthForDate());world.setWeather(weather);
+ monthPicker.value=String(month);weatherPicker.value=weather;
+ const label=world.season.charAt(0).toUpperCase()+world.season.slice(1);
+ if($('[data-season]').textContent!==label)$('[data-season]').textContent=label;
+}
+calendarToggle.onclick=()=>{
+ calendarPanel.hidden=!calendarPanel.hidden;calendarToggle.setAttribute('aria-expanded',String(!calendarPanel.hidden));
+ if(!calendarPanel.hidden){
+  $('[data-room-panel]').hidden=true;$('[data-room-toggle]').setAttribute('aria-expanded','false');
+ }
+};
+$('[data-room-toggle]').addEventListener('click',()=>{
+ calendarPanel.hidden=true;calendarToggle.setAttribute('aria-expanded','false');
+});
+function changeCalendar(){
+ initSound();
+ const month=Number(monthPicker.value),weather=weatherPicker.value;
+ if(room?.changeCalendar(month,weather)){
+  monthPicker.value=String(calendarMonth);weatherPicker.value=weatherChoice;
+  return;
+ }
+ setCalendarSeason(month?seasonForMonth(month):seasonForDate(),month,weather);
+}
+monthPicker.onchange=weatherPicker.onchange=changeCalendar;
+setCalendarSeason(seasonForDate());
+setInterval(()=>{if(!room?.active&&!calendarMonth)setCalendarSeason(seasonForDate());},60_000);
+room=mountRoom({
+ root,T,world,setSeason:setCalendarSeason,
+ getView:()=>({position:camera.position.toArray(),yaw,sky,calendarMonth,weather:weatherChoice,area:cinemaView?'Cinema':inAttic()?'Attic':insideCafe()?'Café':areaAt(camera.position.z)}),
+ setSky:value=>{if(value!==sky)selectTime(value);},
+ enterCinema:()=>{if(!cinemaView)goToScreen();sitAtCinema(0);}
+});
+if(['#movie-night','#full-moon-cinema'].includes(location.hash)){
+ goToScreen();
+ if(location.hash==='#full-moon-cinema')selectTime('fullMoon',true);
+}
+requestAnimationFrame(frame);
+canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();stop();error.hidden=false;error.textContent='Graphics paused. Reload to continue.';});
+}catch(e){error.hidden=false;error.textContent='The 3D view needs WebGL and an internet connection for Three.js. '+e.message;}
+</script>
+<!-- FIREFLY EXPERIENCE END -->

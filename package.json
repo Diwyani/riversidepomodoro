@@ -1,0 +1,14 @@
+{
+  "name": "blue-blush-firefly-walk",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node room-server.mjs",
+    "test": "node check.mjs && node check-timer.mjs && node check-layout.mjs",
+    "paint": "node paint-assets.mjs"
+  },
+  "dependencies": {
+    "three": "0.170.0",
+    "@napi-rs/canvas": "1.1.0"
+  }
+}
