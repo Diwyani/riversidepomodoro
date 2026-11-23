@@ -22,7 +22,7 @@ world.advance(1,.016);assert(marker.mesh.position.z>previousZ,'Current flows tow
 assert(world.attic.getObjectByName('white bedsheet'));
 assert(world.attic.getObjectByName('rose wool kambal'));
 
-assert(world.cafe);assert(world.musicPlayer);let books=0,pastries=0;world.cafe.traverse(o=>{if(o.name==='book')books++;if(o.name==='croissant')pastries++;});assert.equal(books,30);assert.equal(pastries,3);world.setTime('night',true);world.advance(2,.016);assert(world.fireLight.intensity>0);console.log('PASS: café books, pastries, music player and night fire.');
+assert(world.cafe);assert(world.musicPlayer);let books=0,pastries=0;world.cafe.traverse(o=>{if(o.name==='book')books++;if(o.name==='croissant')pastries++;});assert.equal(books,32);assert.equal(pastries,3);world.setTime('night',true);world.advance(2,.016);assert(world.fireLight.intensity>0);console.log('PASS: café books, pastries, music player and night fire.');
 
 const winterTufts=world.scene.getObjectByName('grass through snow');
 const snowLayer=world.scene.getObjectByName('snow flurries');

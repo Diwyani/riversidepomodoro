@@ -7,7 +7,7 @@ export const PALETTES={
 };
 // Art presets for Little Stream. The calendar is shared across time zones.
 const indiaMonth=new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',month:'numeric'});
-const monthSeasons=['winter','winter','spring','spring','summer','summer','monsoon','monsoon','monsoon','autumn','autumn','winter'];
+const monthSeasons=['winter','winter','spring','spring','spring','summer','summer','monsoon','monsoon','autumn','autumn','winter'];
 const seasonPalettes={
  spring:{ground:0xd7dfce,grass:0xc2cbb7,leaf:[0x8fa28a,0xa6b497,0x8b9e98],water:0xb8dfd8,fogFar:83,grassHeight:1,snow:0,wind:.96,fruit:false},
  summer:{ground:0xe9e2bf,grass:0xd8dea0,leaf:[0x8dad75,0xa4b574,0x8faf78],water:0xbad8cc,fogFar:101,grassHeight:.86,snow:0,wind:.89,fruit:false},
@@ -160,7 +160,7 @@ gl_FragColor=vec4(c,1.);
   const trunkCurve=new T.CatmullRomCurve3(points.map(v=>new T.Vector3(...v)));
   const trunkGeometry=new T.TubeGeometry(trunkCurve,24,1,9,false),trunkVertices=trunkGeometry.attributes.position;
   for(let j=0;j<=24;j++){
-   const t=j/24,center=trunkCurve.getPointAt(t),radius=baseRadius*(.065+.935*Math.pow(1-t,.85));
+   const t=j/24,center=trunkCurve.getPointAt(t),radius=baseRadius*(.22+.78*Math.pow(1-t,.85));
    for(let k=0;k<=9;k++){
     const i=j*10+k;
     trunkVertices.setXYZ(i,center.x+(trunkVertices.getX(i)-center.x)*radius,center.y+(trunkVertices.getY(i)-center.y)*radius,center.z+(trunkVertices.getZ(i)-center.z)*radius);
@@ -171,6 +171,7 @@ gl_FragColor=vec4(c,1.);
   for(let i=0;i<trunkUV.count;i++){const along=trunkUV.getX(i),around=trunkUV.getY(i);trunkUV.setXY(i,around,along*2);}
   trunkUV.needsUpdate=true;trunkGeometry.computeVertexNormals();
   const trunk=new T.Mesh(trunkGeometry,activeBark);trunk.name=name;root.add(trunk);
+  const cap=new T.Mesh(new T.SphereGeometry(baseRadius*.22,10,8),activeBark);cap.position.copy(trunkCurve.getPointAt(1));root.add(cap);
   return trunk;
  }
  const foliageKinds=[],seasonalFruit=[],canopyTree=[],fringeTree=[];
@@ -184,7 +185,7 @@ gl_FragColor=vec4(c,1.);
   const form=index%4,sign=index%2?-1:1,variation=.45+rng()*.6,depth=(rng()-.5)*.8;
   const lean=form===0?sign*.08:sign*variation,bendZ=form===0?depth*.12:depth;
   const offsets=form===1?[0,-lean*.85,lean*.95,-lean*.48,lean*.65]:[0,-lean*.18,lean*.52,lean,lean*.88];
-  const levels=[0,.25,.58,.83,1];
+  const levels=[0,.25,.58,.76,.84];
   const trunkPoints=levels.map((t,j)=>[tr.x+offsets[j],y+tr.h*t,tr.z+bendZ*t]);
   const trunk=curvedLimb(trunkPoints,tr.r,'curved tapered trunk');
   trunk.userData.form=['straight','double bend','multiple branches','wide single branch'][form];
@@ -241,6 +242,10 @@ gl_FragColor=vec4(c,1.);
    }
   }
  }
+ const canopyFade=new T.InstancedBufferAttribute(new Float32Array(canopy.instanceMatrix.count).fill(1),1);canopy.geometry.setAttribute('seasonFade',canopyFade);
+ leafMat.transparent=true;
+ const previousLeafCompile=leafMat.onBeforeCompile;
+ leafMat.onBeforeCompile=shader=>{previousLeafCompile(shader);shader.vertexShader='attribute float seasonFade; varying float leafFade;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nleafFade=seasonFade;');shader.fragmentShader='varying float leafFade;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\ndiffuseColor.a*=leafFade;if(diffuseColor.a<.01)discard;');};
  canopy.count=ci;fringe.count=fi;
  const canopyBase=canopy.instanceMatrix.array.slice(),fringeBase=fringe.instanceMatrix.array.slice();
  // Winter: every third broadleaf tree drops all its leaves. Cedars and persimmons keep theirs.
@@ -409,16 +414,31 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  const ridgeMaterial=new T.MeshLambertMaterial({map:textures.leaf,color:0x999ba7});
  for(const side of [-1,1]){for(let i=0;i<5;i++){const ridge=new T.Mesh(clusterG,i<2?cliffMat:ridgeMaterial);ridge.name='supporting-ridge';ridge.position.set(fallX+side*(10+i*7),4.5-i*.6,fallZ-5-i*4);ridge.scale.set(8+i*1.7,12-i*1.6,7+i);ridge.rotation.z=side*(.18+i*.025);waterfall.add(ridge);}}
  const hut=new T.Group();hut.name='streamside-workspace';hut.position.set(-1.5,heightAt(-1.5,-43),-43);root.add(hut);
- const timber=new T.MeshStandardMaterial({map:textures.bark,color:0xd8b9a1});
+ const timber=new T.MeshStandardMaterial({map:textures.barkSoft||textures.bark,color:0xcbb08e,roughness:.83,metalness:0});
+ // Fine grain adds close-up variation without changing the warm timber palette.
+ timber.onBeforeCompile=shader=>{
+  shader.vertexShader='varying vec3 woodPoint;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nwoodPoint=position;');
+  shader.fragmentShader='varying vec3 woodPoint;\n'+shader.fragmentShader;
+  shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\nfloat grain=sin(woodPoint.x*135.+sin(woodPoint.z*3.5)*2.+sin(woodPoint.y*8.)*.5);diffuseColor.rgb*=.97+.03*grain;');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=clamp(roughnessFactor+grain*.035,.65,.95);');
+ };
  const roofMat=new T.MeshStandardMaterial({map:textures.leaf,color:0x657c7a});
  function box(parent,w,h,d,x,y,z,mat){const mesh=new T.Mesh(new T.BoxGeometry(w,h,d),mat);mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;}
  const {west:westWall,east:eastWall,back:backWall,front:frontWall}=CAFE_LAYOUT;
  const {stairX,stairsFront,stairsBack,loftHeight}=CAFE_LAYOUT;
- const groundObstacles=[{minX:-.95,maxX:2.55,minZ:-3.345,maxZ:-2.575},{minX:2.25,maxX:2.78,minZ:-1.65,maxZ:.92},{minX:.35,maxX:1.65,minZ:-.28,maxZ:.58},{minX:-.30,maxX:.40,minZ:-.20,maxZ:.50},{minX:-1.20,maxX:-.50,minZ:.70,maxZ:1.30}];
+ const groundObstacles=[
+  {name:'kitchen',minX:-.95,maxX:2.55,minZ:-3.345,maxZ:-2.575},
+  {name:'corner books',minX:-3.02,maxX:-1.38,minZ:-3.38,maxZ:-2.90},
+  {name:'work desk',minX:.35,maxX:1.65,minZ:.40,maxZ:1.50},
+  {name:'study chairs',minX:-.25,maxX:.35,minZ:.65,maxZ:1.25},
+  {name:'record console',minX:-4.10,maxX:-3.14,minZ:-1.52,maxZ:-.92},
+  {name:'red armchair',minX:-4.06,maxX:-3.04,minZ:-3.25,maxZ:-2.29},
+  {name:'floor lamp',minX:-4.15,maxX:-3.81,minZ:-2.22,maxZ:-1.88}
+ ];
  box(hut,eastWall-westWall,.16,frontWall-backWall,(westWall+eastWall)/2,.09,(frontWall+backWall)/2,timber);
- const curtainMaterial=new T.MeshStandardMaterial({color:0xffffff,roughness:1,side:T.DoubleSide});
+ const curtainMaterial=new T.MeshStandardMaterial({color:0xeee4cf,roughness:1,side:T.DoubleSide});
  const curtainPanels=[];
- const laceMaterial=new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:1,side:T.DoubleSide});
+ const laceMaterial=new T.MeshBasicMaterial({color:0xd2c6ad,transparent:true,opacity:1,side:T.DoubleSide});
  const laceTrim=laceMaterial.clone();laceTrim.depthWrite=false;
  if(typeof document!=='undefined'){
   const tile=document.createElement('canvas');tile.width=512;tile.height=32;
@@ -449,7 +469,7 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
     const pos=pleats.attributes.position;
     for(let i=0;i<pos.count;i++){const u=pos.getX(i);pos.setZ(i,Math.sin(u/width*73)*.029);pos.setY(i,pos.getY(i)-.015*Math.cos(u/width*55));}
     pleats.computeVertexNormals();
-    const panel=new T.Mesh(pleats,curtainMaterial);panel.name='curtain';panel.position.z=-.09;bay.add(panel);
+    const panel=new T.Mesh(pleats,curtainMaterial);panel.name='curtain';if(parent.name==='attic-bedroom'||y>3){panel.material=curtainMaterial.clone();panel.material.color.set(0xe5c668);panel.material.transparent=true;panel.material.opacity=.48;panel.material.depthWrite=false;}panel.position.z=-.09;bay.add(panel);
        const lace=new T.Mesh(new T.PlaneGeometry(width*.49,.088),laceTrim);
     lace.position.set(0,-height*.43,.015);panel.add(lace);
     const tie=box(panel,width*.43,.055,.044,0,-.09,.035,laceMaterial);
@@ -494,7 +514,8 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  }
  const attic=new T.Group();attic.name='café attic bedroom';hut.add(attic);
  // The stair opening stays clear of the loft floor.
- box(attic,eastWall-CAFE_LAYOUT.loftEdge,.15,-.02-backWall,(eastWall+CAFE_LAYOUT.loftEdge)/2,loftHeight-.075,(backWall-.02)/2,timber);
+ for(const [left,right] of [[CAFE_LAYOUT.loftEdge,-.65],[.65,eastWall]])box(attic,right-left,.15,-.02-backWall,(left+right)/2,loftHeight-.075,(backWall-.02)/2,timber);
+ box(attic,1.30,.15,-1.40-backWall,0,loftHeight-.075,(backWall-1.40)/2,timber);
  box(attic,CAFE_LAYOUT.loftEdge-westWall,.15,stairsBack-backWall,(westWall+CAFE_LAYOUT.loftEdge)/2,loftHeight-.075,(backWall+stairsBack)/2,timber);
  for(let i=0;i<14;i++){
   const run=(stairsFront-stairsBack)/14,rise=(loftHeight-.17)/14;
@@ -510,7 +531,7 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  box(attic,eastWall-CAFE_LAYOUT.loftEdge,.075,.08,(eastWall+CAFE_LAYOUT.loftEdge)/2,loftHeight+.77,-.025,timber);
  const linen=new T.MeshLambertMaterial({color:0xf4e5cb});
  // Attic furniture. Positions here are local to the café.
- const bedX=.48,bedZ=-1.85;
+ const bedX=1.98,bedZ=-2.25;
  // Round wool rug: its centre meets the foot of the bed, leaving roughly half exposed.
  const rugMaterial=new T.MeshLambertMaterial({color:0xffffff});
  rugMaterial.onBeforeCompile=shader=>{
@@ -555,8 +576,8 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  box(bed,1.23,.57,.08,0,.56,-.94,timber);
 
  const pillow=new T.Mesh(new T.SphereGeometry(1,28,18),linen);
- pillow.name='oversized pillow';pillow.position.set(-.065,.51,-.61);
- pillow.scale.set(.55,.178,.35);pillow.rotation.y=-.09;bed.add(pillow);
+ pillow.name='oversized pillow';pillow.position.set(-.065,.59,-.61);
+ pillow.scale.set(.46,.22,.30);pillow.rotation.y=-.09;bed.add(pillow);
  const duvetGeometry=new T.PlaneGeometry(1.46,1.20,28,24);
  duvetGeometry.rotateX(-Math.PI/2);
  const duvetPositions=duvetGeometry.attributes.position;
@@ -566,9 +587,9 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
   duvetPositions.setY(i,.041*Math.cos(x*4)+.014*Math.sin(x*16+z*6)-drape);
  }
  duvetGeometry.computeVertexNormals();
- const duvet=new T.Mesh(duvetGeometry,new T.MeshLambertMaterial({color:0xaa6571,side:T.DoubleSide}));
+ const duvet=new T.Mesh(duvetGeometry,new T.MeshLambertMaterial({color:0x9e4643,side:T.DoubleSide}));
  duvet.name='rose wool kambal';duvet.position.set(0,.519,.255);bed.add(duvet);
- const fold=new T.Mesh(new T.CylinderGeometry(.048,.048,1.24,16),new T.MeshLambertMaterial({color:0xc3888c}));
+ const fold=new T.Mesh(new T.CylinderGeometry(.048,.048,1.24,16),new T.MeshLambertMaterial({color:0xb35a54}));
  fold.rotation.z=Math.PI/2;fold.position.set(0,.549,-.32);bed.add(fold);
  const hem=new T.MeshLambertMaterial({color:0xd0a0a0});
  for(let i=0;i<20;i++){
@@ -580,7 +601,8 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  const nightstand=new T.Group();nightstand.name='attic side table';nightstand.position.set(1.52,loftHeight,-1.70);attic.add(nightstand);
  box(nightstand,.45,.07,.47,0,.42,0,timber);
  for(const x of [-.17,.17])for(const z of [-.17,.17])box(nightstand,.052,.42,.052,x,.21,z,timber);
- const bedroomLamp=new T.Group();bedroomLamp.name='poppy paper bedside lamp';bedroomLamp.position.y=.46;nightstand.add(bedroomLamp);
+ for(const [x,r,h,color] of [[-.10,.055,.065,0xe6d9c9],[.09,.045,.10,0xb5c4ae]]){const jar=new T.Mesh(new T.CylinderGeometry(r,r,h,20),new T.MeshStandardMaterial({color,roughness:.35}));jar.name='night cream jar';jar.position.set(x,.49+h/2,0);nightstand.add(jar);const lid=new T.Mesh(new T.CylinderGeometry(r*1.04,r*1.04,.018,20),new T.MeshStandardMaterial({color:0xc8ac80,roughness:.5}));lid.position.set(x,.50+h,0);nightstand.add(lid);}
+ const bedroomLamp=new T.Group();bedroomLamp.name='poppy paper bedside lamp';bedroomLamp.position.set(-.85,loftHeight+.90,-2.63);attic.add(bedroomLamp);
  let poppyTexture=null;
  if(typeof document!=='undefined'){
   const c=document.createElement('canvas');c.width=c.height=384;const g=c.getContext('2d');g.fillStyle='#e4a545';g.fillRect(0,0,384,384);
@@ -642,15 +664,21 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  const loftWindow=new T.Mesh(new T.PlaneGeometry(.92,.67),glass);
  loftWindow.position.set(-.67,3.55,frontWall+.057);hut.add(loftWindow);
  // Desk faces the river, with an open laptop and a proper chair.
- const desk=box(hut,1.3,.10,.85,1,1.04,.15,timber);
- for(const x of [.45,1.55])for(const z of [-.18,.48])box(hut,.07,.92,.07,x,.54,z,timber);
+ const desk=box(hut,1.3,.08,1.10,1,.91,.95,timber);desk.name='shared study table';
+ for(const x of [.45,1.55])for(const z of [.48,1.42])box(hut,.055,.70,.055,x,.52,z,timber);
  const metal=new T.MeshStandardMaterial({color:0x727e8f,roughness:.8});
- const laptop=new T.Group();laptop.name='open-laptop';laptop.position.set(1,1.11,.15);laptop.rotation.y=-Math.PI/2;hut.add(laptop);
+ const laptop=new T.Group();laptop.name='open-laptop';laptop.position.set(1,.97,.95);laptop.rotation.y=-Math.PI/2;hut.add(laptop);
  box(laptop,.55,.025,.36,0,0,0,metal);
  const lid=new T.Group();lid.position.set(0,.02,-.17);lid.rotation.x=-.15;laptop.add(lid);box(lid,.55,.34,.025,0,.17,0,metal);
  const screenMat=new T.MeshStandardMaterial({color:0xa8c5ca,emissive:0x90bccb,emissiveIntensity:.7,roughness:1});box(lid,.49,.28,.008,0,.17,.017,screenMat);
  const ink=new T.MeshBasicMaterial({color:0x4a6d7b});for(let i=0;i<5;i++)box(lid,.27+(i%2)*.1,.009,.004,-.035,.25-i*.035,.023,ink);
- const seat=box(hut,.65,.10,.64,.05,.58,.15,timber);box(hut,.10,.65,.64,-.25,.9,.15,timber);for(const x of [-.2,.3])for(const z of [-.08,.38])box(hut,.06,.5,.06,x,.29,z,timber);
+ const studyChairs=[];
+ for(const z of [.95]){
+  const chair=new T.Group();chair.name='study table chair';chair.position.set(.05,0,z);hut.add(chair);studyChairs.push(chair);
+  box(chair,.50,.07,.50,0,.60,0,timber);box(chair,.055,.40,.50,-.225,.83,0,timber);
+  for(const x of [-.21,.21])for(const pz of [-.21,.21])box(chair,.04,.40,.04,x,.37,pz,timber);
+  box(chair,.52,.045,.045,0,.38,-.22,timber);
+ }
  // A compact book cafe fits around the original river-facing work desk.
  const cafe=new T.Group();cafe.name='little-stream-book-cafe';hut.add(cafe);
  const creamMat=new T.MeshLambertMaterial({color:0xead9ba}),coffeeMat=new T.MeshLambertMaterial({color:0x49372f}),sageMat=new T.MeshLambertMaterial({color:0x7a9585}),brassMat=new T.MeshStandardMaterial({color:0xb49a68,roughness:.8});
@@ -658,19 +686,19 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  const kitchen=new T.Group();kitchen.name='back right kitchen';kitchen.position.set(.9,0,-1.9);cafe.add(kitchen);
  // Back counter: coffee machine, pastry display, sink and an under-counter oven.
  box(kitchen,3.35,.82,.62,-.10,.58,-1.06,sageMat);box(kitchen,3.5,.10,.77,-.10,1.04,-1.06,timber);
- box(kitchen,.66,.52,.43,.83,1.35,-1.13,metal);box(kitchen,.61,.18,.09,.83,1.49,-.87,creamMat);
- for(const x of [.64,1.02]){cylinder(kitchen,.09,.12,x,1.11,-.84,creamMat);box(kitchen,.025,.11,.035,x,1.29,-.86,brassMat);}
- for(const x of [.63,.83,1.03])cylinder(kitchen,.025,.025,x,1.61,-1.10,brassMat);
+ const espresso=new T.Group();espresso.name='sage espresso machine';espresso.position.set(.83,1.10,-1.13);kitchen.add(espresso);
+ const machineEnamel=new T.MeshPhysicalMaterial({color:0x6f8274,roughness:.33,clearcoat:.4}),machineSteel=new T.MeshStandardMaterial({color:0xbabbb3,metalness:.85,roughness:.28}),machineDark=new T.MeshStandardMaterial({color:0x292d2b,roughness:.65});
+ box(espresso,.53,.39,.34,0,.225,0,machineEnamel);box(espresso,.48,.20,.018,0,.29,.18,machineSteel);box(espresso,.45,.025,.23,0,.035,.18,machineSteel);
+ for(let i=0;i<8;i++)box(espresso,.008,.003,.15,-.18+i*.05,.050,.19,machineDark);
+ const gauge=new T.Mesh(new T.CircleGeometry(.045,24),creamMat);gauge.position.set(-.09,.32,.192);espresso.add(gauge);const needle=box(espresso,.003,.034,.003,-.09,.325,.195,machineDark);needle.rotation.z=-.6;
+ for(const x of [.045,.13]){const button=new T.Mesh(new T.CircleGeometry(.018,16),machineDark);button.position.set(x,.33,.194);espresso.add(button);}
+ box(espresso,.12,.045,.10,-.035,.21,.205,machineSteel);box(espresso,.035,.03,.19,-.035,.20,.34,machineDark);box(espresso,.035,.09,.025,-.055,.145,.235,machineSteel);
+ const wand=new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3([new T.Vector3(.21,.25,.18),new T.Vector3(.25,.18,.24),new T.Vector3(.23,.08,.27)]),16,.009,8,false),machineSteel);espresso.add(wand);
+ cylinder(espresso,.045,.065,-.035,.09,.22,creamMat);cylinder(espresso,.038,.003,-.035,.124,.22,coffeeMat);
+ box(espresso,.51,.025,.33,0,.435,0,machineSteel);
  const sink=box(kitchen,.48,.025,.36,-1.25,1.10,-1.05,metal);box(kitchen,.34,.03,.24,-1.25,1.105,-1.05,coffeeMat);box(kitchen,.035,.26,.035,-1.25,1.24,-1.23,brassMat);box(kitchen,.035,.035,.21,-1.25,1.36,-1.14,brassMat);
  box(kitchen,.7,.46,.025,-1.12,.61,-.735,metal);box(kitchen,.56,.30,.015,-1.12,.59,-.713,coffeeMat);box(kitchen,.43,.035,.045,-1.12,.84,-.69,brassMat);
- const tray=box(kitchen,.83,.035,.45,-.28,1.12,-.98,creamMat);tray.name='pastry-tray';
- const pastryMat=new T.MeshLambertMaterial({map:textures.bark,color:0xe5ac65});
- for(let j=0;j<3;j++){
-  const croissant=new T.Group();croissant.name='croissant';croissant.position.set(-.52+j*.25,1.17,-.98);kitchen.add(croissant);
-  for(let i=0;i<5;i++){const u=(i-2)/2,roll=new T.Mesh(new T.SphereGeometry(1,10,7),pastryMat);roll.position.set(u*.085,.025*(1-u*u),u*u*.045);roll.scale.set(.052*(1-.35*Math.abs(u)),.05*(1-.4*Math.abs(u)),.09);roll.rotation.y=u*.55;croissant.add(roll);}
- }
- cylinder(kitchen,.085,.08,-.45,1.16,-1.15,pastryMat);cylinder(kitchen,.087,.015,-.45,1.21,-1.15,creamMat);
- const cafeBookcase=new T.Group();cafeBookcase.name='right wall cafe bookshelf';cafeBookcase.position.set(.9,0,-.4);cafeBookcase.rotation.y=Math.PI;cafe.add(cafeBookcase);
+ const cafeBookcase=new T.Group();cafeBookcase.name='corner cafe bookshelf';cafeBookcase.position.set(-2.20,0,-1.50);cafeBookcase.rotation.y=-Math.PI/2;cafeBookcase.scale.z=.66;cafe.add(cafeBookcase);
  // Bookshelves against the side wall; varied muted covers, visible page blocks.
  for(const y of [.48,1.13,1.78])box(cafeBookcase,.43,.075,2.4,-1.64,y,.03,timber);
  box(cafeBookcase,.07,1.42,.08,-1.84,1.13,-1.17,timber);box(cafeBookcase,.07,1.42,.08,-1.84,1.13,1.23,timber);
@@ -679,10 +707,23 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  const upstairsPosition=new T.Vector3(hut.position.x-1.53,hut.position.y+loftHeight+1.65,hut.position.z-1.75);
  const stairFoot=new T.Vector3(hut.position.x+stairX,hut.position.y+.17+1.65,hut.position.z+stairsFront+.10);
  const bookColors=[0xdc7596,0xd7aa46,0x65a6c5,0xaf6f99,0xc8674b,0xc1c7a2,0xe6d7bb,0x758cb4];
- const bookTitles=['The Restaurant of Lost Recipes','Heart Lamp','The Woman Who Climbed Trees','The Creative Act','Tiny Experiments','Poems 1968–2020','The Year of Magical Thinking','30,000 Years of Art','Hunger','Butter','The Book of Life','The Bookshop Woman','The Artist’s Way','Gods, Guns and Missionaries','Good Material','Evenings and Weekends','Everything I Know About Love','Atlas of the Heart','The Convenience Store by the Sea','On Photography','Days at the Morisaki Bookshop','Welcome to the Hyunam-dong Bookshop','The Vegetarian','The White Book','Greek Lessons','A Philosophy of Walking','Territory of Light','Days at the Torunka Café','Boulder','Breasts and Eggs'];
- const bookAuthors=['Hisashi Kashiwai','Banu Mushtaq','Smriti Ravindra','Rick Rubin','Anne-Laure Le Cunff','Nikki Giovanni','Joan Didion','','Choi Jin-young','Asako Yuzuki','J. Krishnamurti','Nanako Hanada','Julia Cameron','Manu S. Pillai','Dolly Alderton','Oisín McKenna','Dolly Alderton','Brené Brown','Sonoko Machida','Susan Sontag','Satoshi Yagisawa','Hwang Bo-reum','Han Kang','Han Kang','Han Kang','Frédéric Gros','Yūko Tsushima','Satoshi Yagisawa','Eva Baltasar','Mieko Kawakami'];
+ // Everyday kitchen essentials, arranged on the back counter away from the sink.
+ const kitchenPottery=new T.MeshStandardMaterial({color:0xe4d4b5,roughness:.5});
+ const pantryGlass=new T.MeshStandardMaterial({color:0xb6c4a0,transparent:true,opacity:.72,roughness:.25});
+ const kitchenWood=new T.MeshStandardMaterial({color:0xa98255,roughness:.85});
+ for(const [x,h] of [[-.70,.20],[-.45,.26],[-.18,.18]]){cylinder(kitchen,.075,h,x,1.10+h/2,-1.22,pantryGlass);cylinder(kitchen,.080,.025,x,1.115+h,-1.22,kitchenWood);}
+ const utensilPot=cylinder(kitchen,.075,.17,1.37,1.19,-1.19,kitchenPottery);utensilPot.name='kitchen utensil crock';
+ for(let i=0;i<3;i++){const spoon=box(kitchen,.016,.27,.014,1.33+i*.04,1.37,-1.19,kitchenWood);spoon.rotation.z=(i-1)*.16;const head=new T.Mesh(new T.SphereGeometry(.03,10,8),kitchenWood);head.scale.set(.7,1.4,.3);head.position.set(1.33+i*.04,1.51,-1.19);kitchen.add(head);}
+ for(let i=0;i<4;i++)cylinder(kitchen,.105,.012,.30,1.108+i*.014,-1.18,kitchenPottery);
+ box(kitchen,.30,.022,.21,.32,1.11,-.84,kitchenWood).name='small chopping board';
+ const kettle=new T.Mesh(new T.SphereGeometry(.095,18,12),new T.MeshStandardMaterial({color:0x718778,roughness:.45}));kettle.position.set(1.35,1.19,-.87);kitchen.add(kettle);cylinder(kitchen,.055,.018,1.35,1.28,-.87,kitchenWood);
+ const kettleHandle=new T.Mesh(new T.TorusGeometry(.075,.009,8,24,Math.PI),kitchenWood);kettleHandle.position.set(1.35,1.28,-.87);kitchen.add(kettleHandle);
+ const herbPot=cylinder(kitchen,.06,.10,-1.57,1.16,-1.20,kitchenPottery);
+ for(let i=0;i<6;i++){const leaf=new T.Mesh(new T.SphereGeometry(1,8,6),sageMat);leaf.scale.set(.018,.065,.025);leaf.position.set(-1.57+Math.sin(i*2.4)*.03,1.26+(i%2)*.035,-1.20+Math.cos(i*2.4)*.03);leaf.rotation.z=Math.sin(i)*.55;kitchen.add(leaf);}
+ const bookTitles=['The Restaurant of Lost Recipes','Heart Lamp','The Woman Who Climbed Trees','The Creative Act','Tiny Experiments','Poems 1968–2020','The Year of Magical Thinking','30,000 Years of Art','Hunger','Butter','The Book of Life','The Bookshop Woman','The Artist’s Way','Gods, Guns and Missionaries','Good Material','Evenings and Weekends','Everything I Know About Love','Atlas of the Heart','The Convenience Store by the Sea','On Photography','Days at the Morisaki Bookshop','Welcome to the Hyunam-dong Bookshop','The Vegetarian','The White Book','Greek Lessons','A Philosophy of Walking','Territory of Light','Days at the Torunka Café','Boulder','Breasts and Eggs','Jazz','Beloved'];
+ const bookAuthors=['Hisashi Kashiwai','Banu Mushtaq','Smriti Ravindra','Rick Rubin','Anne-Laure Le Cunff','Nikki Giovanni','Joan Didion','','Choi Jin-young','Asako Yuzuki','J. Krishnamurti','Nanako Hanada','Julia Cameron','Manu S. Pillai','Dolly Alderton','Oisín McKenna','Dolly Alderton','Brené Brown','Sonoko Machida','Susan Sontag','Satoshi Yagisawa','Hwang Bo-reum','Han Kang','Han Kang','Han Kang','Frédéric Gros','Yūko Tsushima','Satoshi Yagisawa','Eva Baltasar','Mieko Kawakami','Toni Morrison','Toni Morrison'];
  const books=[];
- const stackHeights=Array(5).fill(0);
+ const stackHeights=Array(Math.ceil(bookTitles.length/6)).fill(0);
  for(let i=0;i<bookTitles.length;i++){
   const stack=Math.floor(i/6),row=stack>=3?1:0;
   const z=-.79+(stack%3)*.80+(rng()-.5)*.11;
@@ -707,11 +748,94 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
   const source=books[[0,3,8,11,18,20,22,24][i]],book=source.clone(true),row=Math.floor(i/4);
   book.name='bedroom shelf book';book.scale.setScalar(.62);book.rotation.set(0,-Math.PI/2,0);book.position.set(0,.055+row*.26+(i%4)*.043,0);bedroomBookshelf.add(book);
  }
- // A visible record player on a small side table; clicking it operates the audio control.
- box(cafe,.67,.07,.57,-.85,.78,1.0,timber);for(const x of [-1.11,-.59])for(const z of [.79,1.21])box(cafe,.055,.62,.055,x,.43,z,timber);
- const musicPlayer=new T.Group();musicPlayer.name='music-player';musicPlayer.position.set(-.85,.87,1);cafe.add(musicPlayer);
- box(musicPlayer,.58,.10,.47,0,0,0,sageMat);const record=cylinder(musicPlayer,.185,.015,-.055,.063,0,coffeeMat);cylinder(musicPlayer,.048,.018,-.055,.074,0,creamMat);box(musicPlayer,.025,.025,.25,.18,.09,0,brassMat);
- const cup=cylinder(hut,.07,.11,1.39,1.14,.30,creamMat);cylinder(hut,.058,.005,1.39,1.199,.30,coffeeMat);
+ // Reading and listening nook occupies the back-left corner beside the stair landing.
+ const listeningNook=new T.Group();listeningNook.name='reading and vinyl corner';cafe.add(listeningNook);
+ const recordConsole=new T.Group();recordConsole.name='vinyl storage console';recordConsole.position.set(-3.62,0,-1.22);recordConsole.rotation.y=-Math.PI/2;listeningNook.add(recordConsole);
+ for(const x of [-.46,.46])box(recordConsole,.035,.70,.60,x,.49,0,timber);
+ box(recordConsole,.95,.045,.60,0,.83,0,timber);box(recordConsole,.95,.035,.60,0,.18,0,timber);box(recordConsole,.95,.025,.58,0,.49,0,timber);
+ box(recordConsole,.95,.65,.025,0,.50,-.287,timber);
+ for(const x of [-.39,.39])for(const z of [-.23,.23])box(recordConsole,.045,.16,.045,x,.09,z,timber);
+ const musicPlayer=new T.Group();musicPlayer.name='music-player';musicPlayer.position.set(0,.89,0);recordConsole.add(musicPlayer);
+ const turntableMetal=new T.MeshStandardMaterial({color:0x9c9c91,metalness:.55,roughness:.45}),vinylMat=new T.MeshStandardMaterial({color:0x16191b,roughness:.48,metalness:.10});
+ box(musicPlayer,.72,.085,.48,0,0,0,timber);box(musicPlayer,.67,.018,.43,0,.052,0,turntableMetal);
+ const record=cylinder(musicPlayer,.197,.012,-.06,.071,0,vinylMat);record.name='grooved vinyl record';
+ const grooveMat=new T.MeshStandardMaterial({color:0x333638,roughness:.42});
+ for(let i=0;i<23;i++){
+  const groove=new T.Mesh(new T.TorusGeometry(.075+i*.0051,.00065,3,64),grooveMat);groove.rotation.x=Math.PI/2;groove.position.set(-.06,.078,0);musicPlayer.add(groove);
+ }
+ const recordLabel=cylinder(musicPlayer,.065,.002,-.06,.079,0,new T.MeshLambertMaterial({color:0x944a48}));
+ cylinder(musicPlayer,.008,.012,-.06,.088,0,turntableMetal);
+ const tonearmCurve=new T.CatmullRomCurve3([new T.Vector3(.26,.095,-.17),new T.Vector3(.23,.11,-.05),new T.Vector3(.17,.10,.10),new T.Vector3(.12,.086,.13)]);
+ musicPlayer.add(new T.Mesh(new T.TubeGeometry(tonearmCurve,18,.006,6,false),turntableMetal));box(musicPlayer,.032,.019,.049,.115,.083,.14,vinylMat);
+ cylinder(musicPlayer,.026,.013,.282,.073,.15,turntableMetal);box(musicPlayer,.06,.008,.025,.24,.069,.205,new T.MeshBasicMaterial({color:0xaa573c}));
+ const vinyls=[];
+ const vinylCollection=[];
+ // A mid-century two-seat sofa with visible walnut frame and red fabric cushions.
+ const redSofa=new T.Group();redSofa.name='red reading armchair';redSofa.position.set(-3.55,.17,-2.77);redSofa.rotation.y=.45;listeningNook.add(redSofa);
+ const sofaWood=new T.MeshStandardMaterial({map:textures.barkSoft||textures.bark,color:0x84664d,roughness:.88});
+ const sofaFabric=new T.MeshPhysicalMaterial({color:0x9e4643,roughness:.94,sheen:.5,sheenColor:0xc17c70,sheenRoughness:.85});
+ sofaFabric.onBeforeCompile=shader=>{
+  shader.vertexShader='varying vec3 sofaPoint;\n'+shader.vertexShader;shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nsofaPoint=position;');
+  shader.fragmentShader='varying vec3 sofaPoint;\n'+shader.fragmentShader;shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\nfloat weave=sin(sofaPoint.x*430.)*sin(sofaPoint.z*430.+sofaPoint.y*370.);diffuseColor.rgb*=.96+.035*weave;');
+ };
+ box(redSofa,.79,.10,.67,0,.31,0,sofaWood);
+ const sofaCushionG=new T.BoxGeometry(2,2,2,6,6,6),cushionP=sofaCushionG.attributes.position;
+ for(let i=0;i<cushionP.count;i++){
+  const p=new T.Vector3().fromBufferAttribute(cushionP,i),inner=p.clone().clampScalar(-.78,.78),corner=p.clone().sub(inner).normalize().multiplyScalar(.22).add(inner);cushionP.setXYZ(i,corner.x,corner.y,corner.z);
+ }sofaCushionG.computeVertexNormals();
+ for(const x of [0]){
+  const cushion=new T.Mesh(sofaCushionG,sofaFabric);cushion.position.set(x,.43,.015);cushion.scale.set(.37,.17,.355);redSofa.add(cushion);
+  const back=new T.Mesh(sofaCushionG,sofaFabric);back.position.set(x,.77,-.26);back.scale.set(.37,.38,.17);back.rotation.x=-.12;redSofa.add(back);
+ }
+ for(const side of [-1,1]){
+  const front=box(redSofa,.052,.68,.055,side*.40,.34,.27,sofaWood);front.rotation.z=-side*.08;
+  const rear=box(redSofa,.052,.88,.055,side*.40,.44,-.26,sofaWood);rear.rotation.x=-.10;
+  box(redSofa,.07,.045,.69,side*.40,.69,.015,sofaWood);
+ }
+ // Soft upholstered arms and a small lumbar cushion, without a throw.
+ for(const side of [-1,1]){const arm=new T.Mesh(sofaCushionG,sofaFabric);arm.position.set(side*.38,.67,.015);arm.scale.set(.085,.105,.34);redSofa.add(arm);}
+ const lumbar=new T.Mesh(sofaCushionG,new T.MeshStandardMaterial({color:0xdba282,roughness:1}));lumbar.name='soft lumbar pillow';lumbar.position.set(.04,.68,-.08);lumbar.scale.set(.25,.13,.095);lumbar.rotation.z=-.08;redSofa.add(lumbar);
+ // Tall curved floor lamp with a ribbed paper dome and stone base.
+ const floorLamp=new T.Group();floorLamp.name='curved reading floor lamp';floorLamp.position.set(-3.98,.17,-2.05);floorLamp.rotation.y=Math.PI;listeningNook.add(floorLamp);
+ const lampBrass=new T.MeshStandardMaterial({color:0xa78c55,metalness:.45,roughness:.65}),lampStone=new T.MeshStandardMaterial({map:textures.stone||null,color:0xd5cdb8,roughness:.84});
+ cylinder(floorLamp,.17,.055,0,.035,0,lampStone);
+ const arcCurve=new T.CatmullRomCurve3([[0,.06,0],[0,1.06,0],[-.035,1.62,0],[-.22,1.95,0],[-.55,2.08,0]].map(p=>new T.Vector3(...p)));
+ floorLamp.add(new T.Mesh(new T.TubeGeometry(arcCurve,44,.014,8,false),lampBrass));
+ const shadeProfile=[[.015,1.94],[.10,1.91],[.21,1.83],[.29,1.70],[.32,1.58]].map(p=>new T.Vector2(...p));
+ const floorShadeMaterial=new T.MeshStandardMaterial({color:0xe9cc91,emissive:0xffd399,emissiveIntensity:.25,roughness:1,side:T.DoubleSide});
+ const floorShade=new T.Mesh(new T.LatheGeometry(shadeProfile,48),floorShadeMaterial);floorShade.position.x=-.55;floorLamp.add(floorShade);
+ for(let rib=0;rib<28;rib++){
+  const a=rib*Math.PI*2/28,points=shadeProfile.map(p=>new T.Vector3(-.55+Math.cos(a)*p.x,p.y,Math.sin(a)*p.x));
+  floorLamp.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(points),12,.0018,4,false),lampBrass));
+ }
+ const rim=new T.Mesh(new T.TorusGeometry(.32,.004,5,48),lampBrass);rim.rotation.x=Math.PI/2;rim.position.set(-.55,1.58,0);floorLamp.add(rim);
+ const lampHanger=new T.Mesh(new T.CylinderGeometry(.004,.004,.14,5),lampBrass);lampHanger.position.set(-.55,2.01,0);floorLamp.add(lampHanger);
+ const readingLight=new T.SpotLight(0xffd2a0,3,4,Math.PI*.30,.9,2);readingLight.position.set(-.55,1.65,0);floorLamp.add(readingLight);readingLight.target.position.set(-3.55,.65,-2.65);cafe.add(readingLight.target);
+ // Ceramic flower clock hangs above the corner books without covering the stairs.
+ const flowerClock=new T.Group();flowerClock.name='green ceramic flower clock';flowerClock.position.set(.65,loftHeight+1.35,-3.325);attic.add(flowerClock);
+ const clockOutline=[];const clockShape=new T.Shape();
+ for(let i=0;i<=100;i++){const a=i*Math.PI*2/100,r=.285+.042*Math.cos(5*a-Math.PI/2),x=Math.cos(a)*r,y=Math.sin(a)*r;i?clockShape.lineTo(x,y):clockShape.moveTo(x,y);clockOutline.push(new T.Vector3(x,y,0));}
+ const clockFace=new T.Mesh(new T.ShapeGeometry(clockShape,32),new T.MeshStandardMaterial({color:0xe6dfcb,roughness:.84}));flowerClock.add(clockFace);
+ const clockRim=new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(clockOutline,true),100,.019,8,true),new T.MeshStandardMaterial({color:0x477658,roughness:.30}));clockRim.position.z=.01;flowerClock.add(clockRim);
+ let clockTexture=null;
+ if(typeof document!=='undefined'){
+  const c=document.createElement('canvas');c.width=c.height=512;const g=c.getContext('2d');g.clearRect(0,0,512,512);g.fillStyle='#303932';g.font='25px sans-serif';g.textAlign='center';g.textBaseline='middle';
+  for(let n=1;n<=12;n++){const a=n*Math.PI/6;g.fillText(String(n),256+Math.sin(a)*163,256-Math.cos(a)*163);}
+  clockTexture=new T.CanvasTexture(c);clockTexture.colorSpace=T.SRGBColorSpace;
+ }
+ const clockNumbers=new T.Mesh(new T.PlaneGeometry(.50,.50),new T.MeshBasicMaterial({map:clockTexture,transparent:true,opacity:clockTexture?1:0}));clockNumbers.position.z=.023;flowerClock.add(clockNumbers);
+ const clockHands=[];
+ for(const [length,width,color] of [[.13,.013,0x9a8865],[.20,.006,0x28302b]]){const pivot=new T.Group();pivot.position.z=.035;flowerClock.add(pivot);box(pivot,width,length,.008,0,length*.39,0,new T.MeshLambertMaterial({color}));clockHands.push(pivot);}
+ const clockPin=new T.Mesh(new T.SphereGeometry(.014,10,6),lampBrass);clockPin.position.z=.045;flowerClock.add(clockPin);
+ const clockCord=new T.Mesh(new T.CylinderGeometry(.002,.002,.29,4),lampBrass);clockCord.position.set(-2.20,2.64,-3.325);listeningNook.add(clockCord);
+ let clockMinute=-1;
+ function updateFlowerClock(){
+  const minute=Math.floor(Date.now()/60000);if(minute===clockMinute)return;clockMinute=minute;
+  const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',hour:'numeric',minute:'numeric',hourCycle:'h23'}).formatToParts(new Date());
+  const h=Number(parts.find(p=>p.type==='hour').value),m=Number(parts.find(p=>p.type==='minute').value);
+  clockHands[0].rotation.z=-(h%12+m/60)*Math.PI/6;clockHands[1].rotation.z=-m*Math.PI/30;
+ }updateFlowerClock();
+ // Removed the obsolete floating desk cup.
  const paperLantern=new T.Group();paperLantern.name='Japanese paper cafe lantern';paperLantern.position.set(-.65,2.35,.30);cafe.add(paperLantern);
  let lanternTexture=null;
  if(typeof document!=='undefined'){
@@ -732,11 +856,41 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  for(const y of [-.29,.29]){const rim=new T.Mesh(new T.TorusGeometry(.082,.006,5,24),lanternWire);rim.rotation.x=Math.PI/2;rim.position.y=y;paperLantern.add(rim);}
  const cord=new T.Mesh(new T.CylinderGeometry(.006,.006,.10,6),lanternWire);cord.position.y=.34;paperLantern.add(cord);
  const cafeLight=new T.PointLight(0xffd4a0,.8,7.5,2);cafeLight.position.copy(paperLantern.position);hut.add(cafeLight);
- const deskLamp=new T.Group();deskLamp.name='yellow table lamp';deskLamp.position.set(1.42,1.1,-.13);hut.add(deskLamp);
+ const deskLamp=new T.Group();deskLamp.name='yellow table lamp';deskLamp.position.set(1.42,.96,.67);deskLamp.scale.y=1.55;hut.add(deskLamp);
  cylinder(deskLamp,.11,.026,0,.02,0,brassMat);cylinder(deskLamp,.015,.31,0,.17,0,brassMat);
  const yellowShade=new T.Mesh(new T.CylinderGeometry(.075,.15,.15,18,1,true),new T.MeshStandardMaterial({color:0xffd36a,emissive:0xffb640,emissiveIntensity:.48,side:T.DoubleSide}));
  yellowShade.position.y=.36;deskLamp.add(yellowShade);
- const deskLight=new T.PointLight(0xffcd72,1.5,3,2);deskLight.position.y=.29;deskLamp.add(deskLight);
+ const deskLight=new T.SpotLight(0xffd6a1,2.5,3,Math.PI*.34,.85,2);deskLight.position.y=.30;deskLamp.add(deskLight);deskLight.target.position.set(1.02,.93,.98);hut.add(deskLight.target);
+ const studyAlarm=new T.Group();studyAlarm.name='digital Pomodoro alarm clock';studyAlarm.position.set(1.35,.96,1.28);studyAlarm.rotation.y=-Math.PI/2;hut.add(studyAlarm);
+ const alarmCase=new T.MeshStandardMaterial({color:0xb5654d,roughness:.65});box(studyAlarm,.36,.19,.12,0,.12,0,alarmCase);for(const x of [-.12,.12])box(studyAlarm,.035,.035,.07,x,.015,0,alarmCase);
+ let alarmCanvas,alarmTexture,alarmLast='';if(typeof document!=='undefined'){alarmCanvas=document.createElement('canvas');alarmCanvas.width=512;alarmCanvas.height=192;alarmTexture=new T.CanvasTexture(alarmCanvas);alarmTexture.colorSpace=T.SRGBColorSpace;}
+ const alarmDisplay=new T.Mesh(new T.PlaneGeometry(.31,.13),new T.MeshBasicMaterial({map:alarmTexture,color:alarmTexture?0xffffff:0x25332d}));alarmDisplay.position.set(0,.12,.061);studyAlarm.add(alarmDisplay);
+ function setStudyTimer(text,phase){if(!alarmCanvas||alarmLast===text+phase)return;alarmLast=text+phase;const c=alarmCanvas.getContext('2d');c.fillStyle='#202d29';c.fillRect(0,0,512,192);c.fillStyle='#e5cf91';c.textAlign='center';c.font='100px monospace';c.fillText(text,256,128);c.font='22px monospace';c.fillText(phase.toUpperCase(),256,167);alarmTexture.needsUpdate=true;}
+ setStudyTimer('25:00','study');
+ // A tiny hand-painted ceramic coffee cup and two desk books.
+ const studyBooks=new T.Group();studyBooks.name='study table books';studyBooks.position.set(1.57,.96,1.28);hut.add(studyBooks);
+ box(studyBooks,.30,.045,.21,0,.023,0,new T.MeshStandardMaterial({color:0x789084,roughness:1}));
+ box(studyBooks,.28,.035,.20,.025,.063,.015,new T.MeshStandardMaterial({color:0xc9816c,roughness:1}));
+ const studyCup=new T.Group();studyCup.name='ceramic green tea cup';studyCup.position.set(1.10,.96,1.36);hut.add(studyCup);
+ const ceramic=new T.MeshPhysicalMaterial({color:0xf1dec4,roughness:.30,clearcoat:.55,clearcoatRoughness:.22});
+ const cupProfile=[[.044,0],[.058,.012],[.066,.09],[.063,.115],[.053,.115],[.053,.028]].map(p=>new T.Vector2(...p));studyCup.add(new T.Mesh(new T.LatheGeometry(cupProfile,32),ceramic));
+ const handle=new T.Mesh(new T.TorusGeometry(.038,.009,8,24),ceramic);handle.position.set(.074,.065,0);studyCup.add(handle);
+ cylinder(studyCup,.052,.004,0,.101,0,new T.MeshStandardMaterial({color:0x8b9c42,roughness:.25}));cylinder(studyCup,.09,.009,0,.004,0,ceramic);
+ const petalMat=new T.MeshStandardMaterial({color:0xb56d57,roughness:.5});
+ for(let j=0;j<5;j++){const a=j*Math.PI*2/5,petal=new T.Mesh(new T.SphereGeometry(.009,8,6),petalMat);petal.scale.set(.7,1.4,.35);petal.position.set(Math.sin(a)*.012,.064+Math.cos(a)*.012,.061);studyCup.add(petal);}
+ const coffeeSteam=new T.Group();coffeeSteam.name='timer coffee steam';coffeeSteam.visible=false;studyCup.add(coffeeSteam);
+ for(let j=0;j<3;j++){const points=[];for(let i=0;i<=16;i++){const y=i/16;points.push(new T.Vector3(Math.sin(y*8+j)*.014+(j-1)*.025,.13+y*.26,Math.cos(y*7+j)*.008));}const m=new T.MeshBasicMaterial({color:0xf8f4df,transparent:true,opacity:.48,depthWrite:false});coffeeSteam.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(points),24,.005,4,false),m));}
+ function setStudyActive(active){coffeeSteam.visible=Boolean(active);}
+ // Warm/cool separation gives the café a soft window fill and amber practical lamps.
+ const windowFill=new T.PointLight(0xc5d9e1,.65,6,2);windowFill.position.set(2.35,2.05,.85);hut.add(windowFill);
+ const contactShadows=new T.Group();contactShadows.name='soft cafe contact shadows';hut.add(contactShadows);
+ let contactTexture=null;
+ if(typeof document!=='undefined'){const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d'),gradient=g.createRadialGradient(64,64,5,64,64,64);gradient.addColorStop(0,'rgba(40,29,23,.40)');gradient.addColorStop(.45,'rgba(40,29,23,.22)');gradient.addColorStop(1,'rgba(40,29,23,0)');g.fillStyle=gradient;g.fillRect(0,0,128,128);contactTexture=new T.CanvasTexture(c);contactTexture.colorSpace=T.SRGBColorSpace;}
+ function contact(parent,x,y,z,width,depth,strength=1){if(!contactTexture)return;const mat=new T.MeshBasicMaterial({map:contactTexture,transparent:true,opacity:strength,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1});const m=new T.Mesh(new T.PlaneGeometry(width,depth),mat);m.name='soft contact shadow';m.rotation.x=-Math.PI/2;m.position.set(x,y,z);m.renderOrder=1;parent.add(m);}
+ contact(contactShadows,1,.177,.95,1.65,1.45,.8);contact(contactShadows,.05,.178,.95,.85,.8,.9);
+ contact(contactShadows,-3.55,.178,-2.77,1.25,1.1,.9);contact(contactShadows,-3.62,.178,-1.22,1.20,.85,.8);
+ contact(hut,1.10,.955,1.36,.27,.26,.7);contact(hut,1.42,.955,.67,.35,.34,.7);contact(hut,1.35,.955,1.28,.43,.22,.6);
+ contact(attic,bedX,loftHeight+.017,bedZ,1.60,2.12,.85);
  // The café projector throws a blank field through the front window onto an outdoor sheet.
  const cinema=new T.Group();cinema.name='outdoor cloth cinema';
  const screenX=-.45,screenZ=-35.9;
@@ -781,7 +935,7 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  }
  for(const [index,offset,color] of [[0,-1.05,0x9c7865],[1,1.05,0x728278]]){
   const chair=new T.Group();chair.name=index?'sage camp chair':'clay camp chair';
-  const x=screenX+offset,z=-40.05,groundY=heightAt(x,z);
+  const x=screenX+offset,z=-39.05,groundY=heightAt(x,z);
   chair.position.set(offset,groundY-cinema.position.y,z-screenZ);chair.rotation.y=-Math.atan2(offset,screenZ-z)*.35;outdoorSeating.add(chair);
   const canvasMat=new T.MeshStandardMaterial({color,roughness:.92,side:T.DoubleSide});
   const seatG=new T.PlaneGeometry(.62,.56,12,12),seatP=seatG.attributes.position;
@@ -831,7 +985,7 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  }));
  projectorBeam.visible=false;cinema.add(projectorBeam);
  let cinemaOpen=false,cinemaProgress=0;
- function setCinemaOpen(open){cinemaOpen=open;}
+ function setCinemaOpen(open){cinemaOpen=open;hearth.visible=!open;if(open)fireLight.intensity=0;}
  cinema.visible=false;projector.visible=false;
  // A small outdoor hearth gives the laptop nook warm light after dark.
  const hearth=new T.Group();hearth.name='bonfire between camp chairs';hearth.position.set(screenX,heightAt(screenX,-38.05)+.08,-38.05);root.add(hearth);colliders.push({x:screenX,z:-38.05,r:.62});
@@ -919,9 +1073,26 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  const foam=[];for(let i=0;i<26;i++){const stone=new T.Mesh(new T.SphereGeometry(1,8,5),foamMaterial);stone.position.set(fallX+(rng()-.5)*2.6,-.025,fallZ+1+rng()*2.4);stone.scale.set(.08+rng()*.16,.015,.1+rng()*.25);waterfall.add(stone);foam.push({mesh:stone,x:stone.position.x,z:stone.position.z,phase:rng()*6});}
  const mistMaterial=new T.MeshLambertMaterial({map:textures.fringe,color:0xc6d7e1,transparent:true,opacity:.17,depthWrite:false,side:T.DoubleSide});
  const mist=[];for(let i=0;i<9;i++){const puff=new T.Mesh(new T.PlaneGeometry(1.8,1.2),mistMaterial);puff.position.set(fallX+(rng()-.5)*3,.35+rng()*.7,fallZ+1+rng()*1.5);waterfall.add(puff);mist.push({mesh:puff,y:puff.position.y,phase:rng()*6});}
+ // December/January ice is a stationary surface, crossfaded over flowing water.
+ let freezeAmount=0;
+ const frozenWater=new T.Group();frozenWater.name='frozen lake and waterfall';root.add(frozenWater);
+ const lakeIceMat=new T.MeshStandardMaterial({color:0xb9d5df,roughness:.38,metalness:.12,transparent:true,opacity:0,depthWrite:false});
+ const lakeIce=new T.Mesh(new T.CircleGeometry(pondRadius,96),lakeIceMat);lakeIce.rotation.x=-Math.PI/2;lakeIce.position.copy(pool.position);lakeIce.position.y+=.035;frozenWater.add(lakeIce);
+ const frozenFallMat=new T.MeshStandardMaterial({color:0xc8e1e7,roughness:.4,metalness:.08,side:T.DoubleSide,transparent:true,opacity:0,depthWrite:false});
+ for(const strip of fallStrips){const ice=new T.Mesh(strip.geometry,frozenFallMat);ice.position.copy(strip.position);ice.position.z+=.025;ice.rotation.copy(strip.rotation);frozenWater.add(ice);}
+ const frozenSource=new T.Mesh(sourceWater.geometry,frozenFallMat);frozenSource.position.copy(sourceWater.position);frozenSource.position.y+=.015;frozenSource.rotation.copy(sourceWater.rotation);frozenWater.add(frozenSource);
+ const crackPoints=[],iceRandom=random(7331);
+ for(let i=0;i<16;i++){const angle=iceRandom()*Math.PI*2,rad=iceRandom()*pondRadius*.85,x=pondX+Math.cos(angle)*rad,z=pondZ+Math.sin(angle)*rad;for(let j=0;j<3;j++){const a=angle+j*.6,length=.15+iceRandom()*.42;crackPoints.push(x,-.028,z,x+Math.cos(a)*length,-.028,z+Math.sin(a)*length);}}
+ const crackMat=new T.LineBasicMaterial({color:0xe4f0ef,transparent:true,opacity:0,depthWrite:false});const crackGeo=new T.BufferGeometry();crackGeo.setAttribute('position',new T.Float32BufferAttribute(crackPoints,3));frozenWater.add(new T.LineSegments(crackGeo,crackMat));
+ const flowingOpacity=fallingWater.opacity;
+ function advanceFreeze(dt,quiet){const target=month===12||month===1?1:0;freezeAmount=quiet?target:freezeAmount+(target-freezeAmount)*(1-Math.exp(-dt*.8));if(Math.abs(target-freezeAmount)<.002)freezeAmount=target;
+  frozenWater.visible=freezeAmount>.001;lakeIceMat.opacity=freezeAmount;frozenFallMat.opacity=freezeAmount;crackMat.opacity=freezeAmount*.55;lakeIceMat.depthWrite=frozenFallMat.depthWrite=freezeAmount>.98;
+  fallingWater.opacity=flowingOpacity*(1-freezeAmount);waterMotion.visible=freezeAmount<.98;
+  for(const item of foam)item.mesh.visible=freezeAmount<.98;for(const item of mist)item.mesh.visible=freezeAmount<.98;
+ }
  // Low distant hills retain a layered painted silhouette rather than a flat backdrop.
  const hillMat=new T.MeshLambertMaterial({map:textures.leaf,color:0xb6b4c3});for(let i=0;i<10;i++){const m=new T.Mesh(clusterG,hillMat);m.scale.set(14+rng()*12,5+rng()*5,9+rng()*10);m.position.set(-65+i*15,1,-78-rng()*15);root.add(m);}
- for(let i=0;i<42;i++){const bug=createFirefly(T),z=i<4?17-i*.7:20-rng()*72,x=i<4?[-.8,1.2,-1.6,.6][i]:pathAt(z)+(rng()<.5?-1:1)*(1.2+rng()*6),y=heightAt(x,z)+.7+rng()*1.4;bug.group.position.set(x,y,z);bug.group.scale.setScalar(i<4?1.05:.65+rng()*.5);scene.add(bug.group);flies.push({...bug,origin:new T.Vector3(x,y,z),phase:rng()*6,speed:.25+rng()*.25});}
+ for(let i=0;i<0;i++){const bug=createFirefly(T),z=i<4?17-i*.7:20-rng()*72,x=i<4?[-.8,1.2,-1.6,.6][i]:pathAt(z)+(rng()<.5?-1:1)*(1.2+rng()*6),y=heightAt(x,z)+.7+rng()*1.4;bug.group.position.set(x,y,z);bug.group.scale.setScalar(i<4?1.05:.65+rng()*.5);scene.add(bug.group);flies.push({...bug,origin:new T.Vector3(x,y,z),phase:rng()*6,speed:.25+rng()*.25});}
  // One rooted climber follows the front-left post to the left roof edge.
  const climbers=new T.Group();climbers.name='seasonal cafe climbers';hut.add(climbers);
  const vineMat=new T.MeshLambertMaterial({color:0x696b4d}),vineLeafMat=new T.MeshLambertMaterial({color:0x79916b,side:T.DoubleSide});
@@ -1017,13 +1188,13 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
    dummy.position.set(site.x,base+h/2,site.z);dummy.rotation.set(0,0,0);dummy.scale.set(1,h,1);dummy.updateMatrix();stems.setMatrixAt(i,dummy.matrix);
   });
  }
- populateCreamPatches(flowerRoof,roofSites,roofFlowerHeads);populateCreamPatches(meadowFlowers,meadowSites,groundFlowerHeads);
+ populateCreamPatches(meadowFlowers,meadowSites,groundFlowerHeads);
  function updateClimbers(){
   const lush=season==='monsoon'||rainTarget>0;
-  flowerRoof.visible=meadowFlowers.visible=!snowing;
-  for(const heads of [...roofFlowerHeads,...groundFlowerHeads])heads.visible=month===4&&!snowing;
+  flowerRoof.visible=false;meadowFlowers.visible=!snowing;
+  for(const [i,heads] of [...roofFlowerHeads,...groundFlowerHeads].entries()){heads.visible=!snowing;heads.scale.setScalar(.15+monthlyLife[month-1].bloom*.85);}
   climbers.visible=!snowing;vineLeaves.count=lush?520:season==='autumn'?210:330;
-  vineLeafMat.color.set(lush?0x8fa77c:0xa8b694);vineBlossoms.visible=month===4&&!snowing;vineBuds.visible=month===3&&!snowing;
+  vineLeafMat.color.set(lush?0x8fa77c:0xa8b694);vineBlossoms.visible=!snowing;vineBlossoms.scale.setScalar(monthlyLife[month-1].bloom);vineBuds.visible=month===3&&!snowing;
  }
  root.traverse(o=>{if(o.isMesh){o.castShadow=o!==ground&&o!==water&&o!==grass;o.receiveShadow=true;}});
  key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.camera.left=-14;key.shadow.camera.right=14;key.shadow.camera.top=26;key.shadow.camera.bottom=-14;key.shadow.camera.near=.5;key.shadow.camera.far=85;key.shadow.normalBias=.035;key.position.set(-8,26,-40);key.target.position.set(5,8,-56);scene.add(key.target);
@@ -1195,10 +1366,10 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  butterflyShape.bezierCurveTo(.075,.11,.16,.063,.12,-.025);
  butterflyShape.bezierCurveTo(.08,-.07,.025,-.045,0,0);
  const butterflyWing=new T.ShapeGeometry(butterflyShape,8);
- for(let i=0;i<8;i++){
+ for(let i=0;i<28;i++){
   const group=new T.Group();group.name='blue hour butterfly';scene.add(group);
-  const z=i<4?2-i*1.9:-34-(i-4)*2.6;
-  const x=pathAt(z)+(i%2?-1:1)*(1.2+i%3*.25);
+  const z=i<8?(i<4?2-i*1.9:-34-(i-4)*2.6):pondZ+Math.sin(i*2.4)*(pondRadius+.6);
+  const x=i<8?pathAt(z)+(i%2?-1:1)*(1.2+i%3*.25):pondX+Math.cos(i*2.4)*(pondRadius+.6);
   const wings=[];
   const material=new T.MeshStandardMaterial({color:[0xe5aa72,0xd8afbf,0x94add6,0xe6cf8a][i%4],emissive:0x866057,emissiveIntensity:.14,side:T.DoubleSide,roughness:.92});
   for(const side of [-1,1]){
@@ -1214,6 +1385,15 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  const nearLights=[];for(let i=0;i<4;i++){const l=new T.PointLight(0xffd978,.18,3,2);scene.add(l);nearLights.push(l);}
  let mode='evening',current={...PALETTES.evening},target=PALETTES.evening;
  function setTime(name,immediate=false){if(!PALETTES[name])return;mode=name;target=PALETTES[name];if(immediate){current={...target};apply(1);}}
+ const monthlyLife=[
+  {snow:.9,bloom:.01,butterfly:0,leaf:.12},{snow:.72,bloom:.04,butterfly:0,leaf:.18},
+  {snow:.16,bloom:.38,butterfly:.35,leaf:.65},{snow:0,bloom:1,butterfly:1,leaf:1},
+  {snow:0,bloom:.85,butterfly:.9,leaf:1},{snow:0,bloom:.65,butterfly:.7,leaf:1},
+  {snow:0,bloom:.5,butterfly:.55,leaf:1},{snow:0,bloom:.42,butterfly:.3,leaf:1},
+  {snow:0,bloom:.32,butterfly:.35,leaf:.9},{snow:0,bloom:.2,butterfly:.3,leaf:.65},
+  {snow:0,bloom:.08,butterfly:.08,leaf:.35},{snow:1,bloom:.01,butterfly:0,leaf:.12}
+ ];
+ let seasonalLife={...monthlyLife[3]},monthBlend=null;
  const weatherSeed=random(42138),weatherParticles=[];
  const snowGeometry=new T.BufferGeometry(),rainGeometry=new T.BufferGeometry();
  const snowPoints=new T.Points(snowGeometry,new T.PointsMaterial({color:0xf0eaf8,size:.045,transparent:true,opacity:.75,depthWrite:false}));
@@ -1225,25 +1405,25 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
   `);
  };
  const rainLines=new T.LineSegments(rainGeometry,new T.LineBasicMaterial({color:0xaec6dd,transparent:true,opacity:.47,depthWrite:false}));
- for(let i=0;i<2200;i++)weatherParticles.push([weatherSeed()*38-19,weatherSeed()*15,weatherSeed()*86-59,weatherSeed()]);
- snowGeometry.setDrawRange(0,750);
+ for(let i=0;i<7000;i++)weatherParticles.push([weatherSeed()*38-19,weatherSeed()*15,weatherSeed()*86-59,weatherSeed()]);
+ snowGeometry.setDrawRange(0,5000);
  snowGeometry.setAttribute('position',new T.BufferAttribute(new Float32Array(weatherParticles.length*3),3));
  rainGeometry.setAttribute('position',new T.BufferAttribute(new Float32Array(weatherParticles.length*6),3));
  snowPoints.frustumCulled=rainLines.frustumCulled=false;
  snowPoints.visible=rainLines.visible=false;
  snowPoints.name='snow flurries';rainLines.name='rain showers';scene.add(snowPoints,rainLines);
- let weather='clear';
+ let weather='auto';
  const defaultWeather={winter:'snow',monsoon:'rain',autumn:'clear',spring:'clear',summer:'clear'};
  const fogMultiplier={clear:1,mist:.53,rain:.91,snow:.90};
  let fogTarget,snowTarget=0,rainTarget=0;
  snowPoints.material.opacity=rainLines.material.opacity=0;
  function refreshWeather(){
-  const effective=weather==='auto'?defaultWeather[season]:weather;
-  snowTarget=effective==='snow'?.52:0;rainTarget=effective==='rain'?.30:0;raining=effective==='rain';
+  const effective=weather==='auto'?(['snow','snow','clear','clear','clear','mist','mist','rain','rain','clear','clear','snow'][month-1]||defaultWeather[season]):weather;
+  snowTarget=effective==='snow'?(month===11?.24:month===12?.95:.80):month===3?.12:0;snowGeometry.setDrawRange(0,7000);rainTarget=effective==='rain'?.42:0;raining=effective==='rain';
   fogTarget=seasonStyle.fogFar*fogMultiplier[effective];
-  snowing=effective==='snow'||season==='winter';
+  snowing=month!==11&&(effective==='snow'||season==='winter');
   ground.material.color.set(snowing?0xeef2f6:seasonStyle.ground);
-  snowAmount.value=snowing?1:seasonStyle.snow;
+  snowAmount.value=monthlyLife[month-1].snow;
   grassHeight.value=snowing?.07:seasonStyle.grassHeight;
   grassMat.color.set(snowing?0xf2f3ee:seasonStyle.grass);
   // Under snow the shortened blades lie flat as dark streaks, so the grass is hidden instead.
@@ -1255,6 +1435,7 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  }
  let snowing=false;
  function setWeather(value){
+  if(value===weather)return;
   if(value!=='auto'&&!Object.hasOwn(fogMultiplier,value))return;
   weather=value;refreshWeather();
  }
@@ -1296,21 +1477,52 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
   const zero=new T.Matrix4().makeScale(0,0,0);
   for(let i=0;i<foliageKinds.length;i++){
    const kind=foliageKinds[i],tree=canopyTree[i];
-   if(season==='winter'&&bareInWinter[tree])canopy.setMatrixAt(i,zero);else canopy.instanceMatrix.array.set(canopyBase.subarray(i*16,i*16+16),i*16);
+   canopy.instanceMatrix.array.set(canopyBase.subarray(i*16,i*16+16),i*16);canopyFade.setX(i,season==='winter'&&bareInWinter[tree]?0:1);
    canopy.setColorAt(i,new T.Color(kind>=0?seasonStyle.leaf[kind]:(seasonStyle.cedar||[0x7e9b8d,0x617f7b])[i%2]));
   }
-  canopy.instanceColor.needsUpdate=true;canopy.instanceMatrix.needsUpdate=true;
+  canopyFade.needsUpdate=true;canopy.instanceColor.needsUpdate=true;canopy.instanceMatrix.needsUpdate=true;
   crownSnow.instanceMatrix.array.set(canopy.instanceMatrix.array.subarray(0,canopy.count*16));crownSnow.instanceMatrix.needsUpdate=true;
   for(let i=0;i<fringe.count;i++){if(season==='winter'&&bareInWinter[fringeTree[i]])fringe.setMatrixAt(i,zero);else fringe.instanceMatrix.array.set(fringeBase.subarray(i*16,i*16+16),i*16);}
   fringe.instanceMatrix.needsUpdate=true;
  }
- // A month sets the season and the month-only touches (April blossom).
- function setMonth(m){month=m;const name=seasonForMonth(m);if(name!==season)setSeason(name);else applyFoliage();updateClimbers();}
+ // Snapshot only when calendar changes; animate just the properties that differ.
+ function seasonalSnapshot(){
+  const objects=new Map(),materials=new Map();scene.traverse(o=>{objects.set(o,{visible:o.visible,scale:o.scale.clone()});for(const m of o.material?(Array.isArray(o.material)?o.material:[o.material]):[]){if(m.color&&!materials.has(m))materials.set(m,m.color.clone());}});
+  return {objects,materials,ground:gp.array.slice(),canopy:canopy.instanceMatrix.array.slice(),fade:canopyFade.array.slice(),colors:canopy.instanceColor.array.slice(),snow:snowAmount.value,life:{...seasonalLife}};
+ }
+ function setMonth(m){
+  if(!Number.isInteger(m)||m<1||m>12)return;
+  const previousMonth=month;const before=seasonalSnapshot();month=m;const name=seasonForMonth(m);if(name!==season)setSeason(name);else applyFoliage();refreshWeather();updateClimbers();
+  // November/December: only snow changes, with no tree rebuild or ground movement.
+  const simpleWinter=(previousMonth===11&&m===12)||(previousMonth===12&&m===11);
+  if(simpleWinter){
+   canopy.instanceMatrix.array.set(before.canopy);canopy.instanceMatrix.needsUpdate=true;
+   canopy.instanceColor.array.set(before.colors);canopy.instanceColor.needsUpdate=true;
+   canopyFade.array.set(before.fade);canopyFade.needsUpdate=true;
+   gp.array.set(before.ground);gp.needsUpdate=true;groundGeometry.computeVertexNormals();
+  }
+  const after=seasonalSnapshot(),objects=[],materials=[];
+  for(const [o,a] of before.objects){const b=after.objects.get(o);if(b&&(a.visible!==b.visible||!a.scale.equals(b.scale))){const fades=[];if(a.visible!==b.visible)o.traverse(mesh=>{if(!mesh.material)return;const mats=Array.isArray(mesh.material)?mesh.material:[mesh.material];const copies=mats.map(mat=>{const copy=mat.clone();copy.onBeforeCompile=mat.onBeforeCompile;copy.customProgramCacheKey=mat.customProgramCacheKey.bind(mat);copy.transparent=true;fades.push({mat:copy,opacity:mat.opacity,depthWrite:mat.depthWrite});return copy;});mesh.material=Array.isArray(mesh.material)?copies:copies[0];});objects.push({o,a,b,fades});}}
+  for(const [mat,a] of before.materials){const b=after.materials.get(mat);if(b&&!a.equals(b))materials.push({mat,a,b});}
+  monthBlend={time:0,objects,materials,before,after,life:{...monthlyLife[m-1]}};
+  blendMonth(0);
+ }
+ function blendMonth(dt,quiet=false){
+  if(!monthBlend)return;const b=monthBlend;b.time+=dt;const t=quiet?1:Math.min(1,b.time/5),k=t*t*(3-2*t);
+  for(const {o,a,b:dest,fades} of b.objects){o.visible=t===1?dest.visible:a.visible||dest.visible;o.scale.lerpVectors(a.scale,dest.scale,k);const alpha=(a.visible?1:0)+((dest.visible?1:0)-(a.visible?1:0))*k;for(const f of fades){f.mat.opacity=t===1?f.opacity:f.opacity*alpha;f.mat.depthWrite=t===1?f.depthWrite:false;}if(t===1)o.scale.copy(dest.scale);}
+  for(const {mat,a,b:dest} of b.materials)mat.color.lerpColors(a,dest,k);
+  for(const [attribute,from,to] of [[gp,b.before.ground,b.after.ground],[canopyFade,b.before.fade,b.after.fade],[canopy.instanceColor,b.before.colors,b.after.colors]]){for(let i=0;i<from.length;i++)attribute.array[i]=from[i]+(to[i]-from[i])*k;attribute.needsUpdate=true;}
+  snowAmount.value=b.before.snow+(b.after.snow-b.before.snow)*k;
+  for(const key of Object.keys(seasonalLife))seasonalLife[key]=b.before.life[key]+(b.life[key]-b.before.life[key])*k;
+  if(t===1)monthBlend=null;
+ }
  setSeason('spring');
  const seasonalWaterColor=new T.Color();
  function apply(k){hemi.color.lerp(new T.Color(mode==='evening'?0xffd1aa:0x9fb8e0),k);key.color.lerp(new T.Color(mode==='evening'?0xffbf8b:0xa1b8e0),k);for(const field of ['top','low','pink','cream'])skyMaterial.uniforms[field].value.lerp(new T.Color(target[field]).lerp(new T.Color(field==='top'?0x6c8198:0xacb6c3),rainStrength.value*.25),k);scene.fog.color.lerp(new T.Color(target.fog).lerp(new T.Color(0x9aabba),rainStrength.value*.22),k);seasonalWaterColor.set(target.water).lerp(new T.Color(seasonStyle.water),.16*(1-current.night*.65));if(snowing)seasonalWaterColor.lerp(new T.Color(0x425d75),.68);seasonalWaterColor.lerp(new T.Color(0x6d8991),wetness.value*.36);waterMat.color.lerp(seasonalWaterColor,k);pool.material.color.copy(waterMat.color).multiplyScalar(.83);for(const f of ['ambient','key','fill','night'])current[f]+=(target[f]-current[f])*k;hemi.intensity=current.ambient;key.intensity=current.key*(1-rainStrength.value*.35);fill.intensity=current.fill*(1+rainStrength.value*.20);skyMaterial.uniforms.night.value=current.night;skyMaterial.uniforms.moonPhase.value+=(Number(mode==='fullMoon')-skyMaterial.uniforms.moonPhase.value)*k;
  cinema.visible=target.night>0&&(cinemaOpen||cinemaProgress>.015);projector.visible=cinema.visible;}
- function advance(t,dt,quiet=false){apply(1-Math.exp(-dt*5));animateFalling(t);
+ function advance(t,dt,quiet=false){
+ blendMonth(dt,quiet);advanceFreeze(dt,quiet);
+ if(coffeeSteam.visible)coffeeSteam.children.forEach((s,i)=>{const phase=quiet?.5:(t*.27+i/3)%1;s.position.y=quiet?0:phase*.08;s.material.opacity=quiet?.30:.18+Math.sin(phase*Math.PI)*.38;});updateFlowerClock();apply(1-Math.exp(-dt*5));animateFalling(t);
  for(const m of mistPuffs){m.puff.position.set(m.base.x+Math.sin(t*.13+m.phase)*.8,m.base.y+Math.sin(t*.09+m.phase*2)*.4,m.base.z);}
  animateWeather(quiet?0:t,dt,quiet);
  const cinemaTarget=cinemaOpen?1:0;
@@ -1347,7 +1559,7 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
   cloth.needsUpdate=true;clothGeometry.computeVertexNormals();
  }
  windStrength.value=seasonStyle.wind*(1+current.night*.48);
- wind.value=t*(1+current.night*.15);record.rotation.y=t*.35;cafeLight.intensity=.6+current.night*.7;flames.visible=current.night>.08;fireLight.intensity=current.night*(1-rainStrength.value*.25)*(5.5+.5*Math.sin(t*5.3)+.3*Math.sin(t*8.1));for(const {mesh,height,phase} of flameTongues){
+ wind.value=t*(1+current.night*.15);record.rotation.y=t*.35;cafeLight.intensity=.85+current.night*.95;hearth.visible=!cinemaOpen;flames.visible=!cinemaOpen&&current.night>.08;fireLight.intensity=(cinemaOpen?0:current.night)*(1-rainStrength.value*.25)*(5.5+.5*Math.sin(t*5.3)+.3*Math.sin(t*8.1));for(const {mesh,height,phase} of flameTongues){
   mesh.scale.y=height*(1+.19*Math.sin(t*5+phase)+.07*Math.sin(t*9+phase));
   mesh.rotation.z=.15*Math.sin(t*3+phase);
  }
@@ -1360,11 +1572,11 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  for(const c of currents){const z=streamStartZ+((c.phase+t*.018)%1)*(streamEndZ-streamStartZ);const x=riverAt(z);c.mesh.position.set(x+c.lane,-.035,z);c.mesh.rotation.y=Math.atan(.192*Math.cos(z*.12));}
  for(const r of ripples){const f=(r.phase+t*.5)%1;r.mesh.scale.set(.2+f*1.8,.15+f*1.2,1);r.mesh.material.opacity=(1-f)*.5;}
 
- for(let i=0;i<fallStrips.length;i++){const strip=fallStrips[i];strip.scale.x=.85+.15*Math.sin(t*2+i);strip.position.y=fallHeight/2-.08+Math.sin(t*3+i)*.04;}
+ for(let i=0;i<fallStrips.length;i++){const strip=fallStrips[i];strip.scale.x=freezeAmount>.98?1:.85+.15*Math.sin(t*2+i);strip.position.y=fallHeight/2-.08+(freezeAmount>.98?0:Math.sin(t*3+i)*.04);}
  for(const f of foam){f.mesh.position.z=f.z+Math.sin(t*.65+f.phase)*.12;f.mesh.scale.y=.015+(.5+.5*Math.sin(t+f.phase))*.012;}
  for(const m of mist){m.mesh.position.y=m.y+Math.sin(t*.6+m.phase)*.14;}
  for(const {group,wings,x,y,z,phase} of butterflies){
-  group.visible=mode==='dawn';
+  group.visible=current.night<.5&&seasonalLife.butterfly>.005;group.scale.setScalar(seasonalLife.butterfly);
   if(!group.visible)continue;
   group.position.set(x+Math.sin(t*.92+phase)*.52,y+Math.sin(t*1.43+phase)*.24,z+Math.cos(t*.71+phase)*.48);
   group.rotation.y=phase+Math.sin(t*.92+phase)*.6;
@@ -1408,5 +1620,5 @@ for(let i=0;i<flies.length;i++){const b=flies[i],p=b.phase,s=t*b.speed;b.group.v
   floor=hut.position.y+(upper?loftHeight:climb);
  }
  return new T.Vector3(x,floor+1.65,z);}
- return{cafeBounds:CAFE_LAYOUT,groundObstacles,kitchen,cafeBookcase,scene,root,flies,butterflies,sky,skyMaterial,hemi,key,fill,ground,path,grass,canopy,fringe,water,waterfall,fallStrips,hut,cafe,attic,shelfTarget,upstairsPosition,stairFoot,cafeDoor,toggleDoor,toggleCurtains,cinema,cinemaSeats,projector,setCinemaOpen,movieScreen,projectorBeam,books,musicPlayer,record,flames,fireLight,pool,sourceWater,fallHeight,droplets,currents,ripples,colliders,setTime,setSeason,setMonth,setWeather,get month(){return month;},get snowing(){return snowing;},advance,move,get wetness(){return wetness.value;},get rainIntensity(){return rainStrength.value;},get raining(){return raining;},get weather(){return weather;},get season(){return season;},get mode(){return mode;},get night(){return current.night;}};
+ return{pondView:new T.Vector3(pondX,heightAt(pondX,pondZ+pondRadius+1.1)+1.65,pondZ+pondRadius+1.1),get frozen(){return month===12||month===1;},get freezeAmount(){return freezeAmount;},get seasonalLife(){return seasonalLife;},studyAlarm,setStudyTimer,studyCup,coffeeSteam,setStudyActive,studyChairs,deskLamp,listeningNook,redSofa,floorLamp,flowerClock,vinyls,vinylCollection,nookView:new T.Vector3(hut.position.x+.70,hut.position.y+1.82,hut.position.z+1.75),cafeBounds:CAFE_LAYOUT,groundObstacles,kitchen,cafeBookcase,scene,root,flies,butterflies,sky,skyMaterial,hemi,key,fill,ground,path,grass,canopy,fringe,water,waterfall,fallStrips,hut,cafe,attic,shelfTarget,upstairsPosition,stairFoot,cafeDoor,toggleDoor,toggleCurtains,cinema,cinemaSeats,projector,setCinemaOpen,movieScreen,projectorBeam,books,musicPlayer,record,flames,fireLight,pool,sourceWater,fallHeight,droplets,currents,ripples,colliders,setTime,setSeason,setMonth,setWeather,get month(){return month;},get snowing(){return snowing;},advance,move,get wetness(){return wetness.value;},get rainIntensity(){return rainStrength.value;},get raining(){return raining;},get weather(){return weather;},get season(){return season;},get mode(){return mode;},get night(){return current.night;}};
 }

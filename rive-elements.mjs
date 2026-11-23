@@ -49,6 +49,10 @@ export async function addRiveElements(T,world,heightAt,pathAt,rivBase64){
  // 170 clumps across the meadow and woodland grass: the first 40 show from May to November, all 170 in April when the field is covered.
  const lavenderGroup=crossed(lavender,1.25,1.5,170,-28,23,1.5,16);lavenderGroup.name='rive lavender';
  lavenderGroup.children.forEach((m,i)=>{m.userData.aprilOnly=i>=80;});
+ // Dense purple clumps follow the dry outer bank of the pond.
+ const pondFlowerGeo=new T.PlaneGeometry(.75,.9);pondFlowerGeo.translate(0,.45,0);
+ for(let i=0;i<54;i++){const a=i*2.39996,rad=world.pool.geometry.parameters.radius+.55+(i%3)*.38,x=world.pool.position.x+Math.cos(a)*rad,z=world.pool.position.z+Math.sin(a)*rad;
+  for(const turn of [0,Math.PI/2]){const m=new T.Mesh(pondFlowerGeo,lavenderGroup.children[0].material);m.position.set(x,heightAt(x,z),z);m.rotation.y=a+turn;m.userData.aprilOnly=false;lavenderGroup.add(m);}}
  // Keep the meadow purple only; no white blooming flower artboard.
  const flowerGroup=new T.Group();flowerGroup.name='rive blooming flowers';
 
@@ -63,9 +67,11 @@ export async function addRiveElements(T,world,heightAt,pathAt,rivBase64){
   // Call once per frame with seconds since the last frame.
   advance(dt){
    // Lavender disappears under snow; white flowers stay absent.
-   lavenderGroup.visible=!world.snowing;
+   disc.visible=world.freezeAmount<.98;disc.material.opacity=1-world.freezeAmount;
+   lavenderGroup.visible=world.seasonalLife.bloom>.005;
    flowerGroup.visible=false;
-   const april=world.month===4;for(const m of flowerGroup.children)m.visible=april||!m.userData.aprilOnly;for(const m of lavenderGroup.children)m.visible=april||!m.userData.aprilOnly;
+   const growth=world.seasonalLife.bloom;
+   for(const m of lavenderGroup.children){if(!m.userData.fullSize)m.userData.fullSize=m.scale.clone();m.visible=true;m.scale.copy(m.userData.fullSize).multiplyScalar(m.userData.aprilOnly?growth:Math.sqrt(growth));}
    for(const p of players){
     p.machine.advance(dt);p.artboard.advance(dt);
     p.renderer.clear();p.renderer.save();

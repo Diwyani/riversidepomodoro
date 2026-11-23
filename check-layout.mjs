@@ -9,8 +9,15 @@ walk(0,b.front-.35);walk(b.stairX,b.stairsFront+.12);walk(b.stairX,b.stairsBack-
 assert(Math.abs(pos.y-w.hut.position.y-b.loftHeight-1.65)<.01,'Stairs reach loft');
 walk(b.loftEdge+.4,b.stairsBack-.20);walk(b.stairX,b.stairsBack-.20);walk(b.stairX,b.stairsFront+.12);
 assert(pos.y-w.hut.position.y<1.9,'Stairs return to ground');
-walk(-1.85,.35);walk(-1.85,-2.05);walk(-.35,-2.05);walk(1.95,-2.05);walk(1.95,-.65);
+walk(-1.40,-.15);walk(1.95,-.15);walk(1.95,-2.05);walk(-.35,-2.05);walk(-.35,-1.30);walk(-2.80,-1.30);walk(-2.80,-2.40);
 assert(pos.distanceTo(w.shelfTarget.getWorldPosition(new T.Vector3()))<2.2,'Books reachable');
 const shelf=w.attic.getObjectByName('small bedroom bookshelf');let books=0;shelf.traverse(o=>{if(o.name==='bedroom shelf book'){books++;assert(o.userData.title);}});assert.equal(books,8);
 for(const name of ['Japanese paper cafe lantern','poppy paper bedside lamp','soft green wool pile'])assert(w.scene.getObjectByName(name),name);
 console.log('PASS: continuous entrance, kitchen, books and physical stairs routes; compact titled books and new lamps/rug.');
+
+assert.equal(w.vinyls.length,0);assert(w.books.some(book=>book.userData.author==='Toni Morrison'));
+assert(w.redSofa&&w.floorLamp&&w.flowerClock);
+
+assert.equal(w.studyChairs.length,1);assert.equal(w.redSofa.name,'red reading armchair');assert(!w.scene.getObjectByName('striped wool sofa throw'));assert.equal(w.deskLamp.name,'yellow table lamp');
+
+w.setStudyActive(true);assert(w.coffeeSteam.visible);w.setStudyActive(false);assert(!w.coffeeSteam.visible);
