@@ -405,8 +405,10 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  const cliffMat=new T.MeshLambertMaterial({map:textures.stone||textures.bark,color:0xaaa4b5});
  const mistCanvas=typeof document!=='undefined'?document.createElement('canvas'):null;if(mistCanvas){mistCanvas.width=mistCanvas.height=128;const g=mistCanvas.getContext('2d'),r=g.createRadialGradient(64,64,0,64,64,64);r.addColorStop(0,'rgba(255,255,255,.9)');r.addColorStop(.45,'rgba(255,255,255,.45)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,128,128);}
  const mistTexture=mistCanvas?new T.CanvasTexture(mistCanvas):null,mistPuffs=[];
+ // Mist above the fall: unlit sprites, so they dim and turn dark blue as night comes in.
+ const fallMist=[],nightMistColor=new T.Color(0x223656);
  for(let i=0;i<40;i++){const puff=new T.Sprite(new T.SpriteMaterial({map:mistTexture,color:0xf4eef3,transparent:true,opacity:.7+rng()*.25,depthWrite:false}));
-  const base=new T.Vector3(fallX+(rng()-.5)*8,fallHeight-2+rng()*9,fallZ-.5-rng()*3);puff.position.copy(base);puff.scale.setScalar(6+rng()*5);puff.name='waterfall top mist';waterfall.add(puff);mistPuffs.push({puff,base,phase:rng()*6});}
+  const base=new T.Vector3(fallX+(rng()-.5)*8,fallHeight-2+rng()*9,fallZ-.5-rng()*3);puff.position.copy(base);puff.scale.setScalar(6+rng()*5);puff.name='waterfall top mist';waterfall.add(puff);mistPuffs.push({puff,base,phase:rng()*6});fallMist.push({material:puff.material,color:puff.material.color.clone(),opacity:puff.material.opacity});}
  // Tall mountain shoulders frame a narrow, open source gully.
  for(let i=0;i<15;i++){const rock=new T.Mesh(clusterG,cliffMat),offset=-8+i*1.15,central=Math.abs(offset)<1.9;rock.position.set(fallX+offset,central?5:7.5,fallZ-2.2-rng());rock.scale.set(1.1+rng()*.6,central?7:10+rng()*3,1.5+rng());rock.rotation.y=rng()*3;waterfall.add(rock);}
  for(const side of [-1,1]){const peak=new T.Mesh(clusterG,cliffMat);peak.position.set(fallX+side*5.5,8,fallZ-7);peak.scale.set(5.1,15,5.4);peak.rotation.z=side*.13;waterfall.add(peak);}
@@ -429,8 +431,8 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  const groundObstacles=[
   {name:'kitchen',minX:-.95,maxX:2.55,minZ:-3.345,maxZ:-2.575},
   {name:'corner books',minX:-3.02,maxX:-1.38,minZ:-3.38,maxZ:-2.90},
-  {name:'work desk',minX:.35,maxX:1.65,minZ:.40,maxZ:1.50},
-  {name:'study chairs',minX:-.25,maxX:.35,minZ:.65,maxZ:1.25},
+  {name:'work desk',minX:.55,maxX:1.21,minZ:-1.86,maxZ:-.34},
+  {name:'study chairs',minX:.01,maxX:.51,minZ:-1.35,maxZ:-.85},
   {name:'record console',minX:-4.10,maxX:-3.14,minZ:-1.52,maxZ:-.92},
   {name:'red armchair',minX:-4.06,maxX:-3.04,minZ:-3.25,maxZ:-2.29},
   {name:'floor lamp',minX:-4.15,maxX:-3.81,minZ:-2.22,maxZ:-1.88}
@@ -453,7 +455,7 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  let curtainsClosed=false,curtainProgress=0;
  function toggleCurtains(){curtainsClosed=!curtainsClosed;return curtainsClosed;}
  const glass=new T.MeshBasicMaterial({color:0xa6c1c8,transparent:true,opacity:.12,depthWrite:false});
- function windowBay(parent,width,height,x,y,z,angle=0,withCurtain=true){
+ function windowBay(parent,width,height,x,y,z,angle=0,withCurtain=true,transom=true){
   const bay=new T.Group();bay.userData.snowLedge={width,height};bay.position.set(x,y,z);bay.rotation.y=angle;parent.add(bay);
   const pane=box(bay,width,height,.018,0,0,0,glass);
   pane.name='glass pane';
@@ -461,7 +463,7 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
    box(bay,.085,height,.10,edge*width/2,0,0,timber);
    box(bay,width,.085,.10,0,edge*height/2,0,timber);
   }
-  box(bay,width,.055,.085,0,-.23,0,timber);
+  if(transom)box(bay,width,.055,.085,0,-.23,0,timber);
   if(withCurtain){
    box(bay,width,.032,.038,0,height/2-.085,-.07,timber);
    for(const side of [-1,1]){
@@ -504,9 +506,15 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  for(const z of [backWall,frontWall]){
   if(z===backWall)box(hut,eastWall-westWall,2.14,.11,roofCenter,3.58,z,timber);
   else {
-   for(const side of [-1,1])box(hut,(eastWall-westWall-.94)/2,2.14,.11,roofCenter+side*((eastWall-westWall+.94)/4),3.58,z,timber);
-   box(hut,.94,.70,.11,roofCenter,2.86,z,timber);
-   box(hut,.94,.77,.11,roofCenter,4.27,z,timber);
+   box(hut,(eastWall-westWall-.94)/2,2.14,.11,roofCenter-((eastWall-westWall+.94)/4),3.58,z,timber);
+   // East half: a picture window that frames the outdoor screen from the attic bed.
+   const winL=.45,winR=2.65,winB=2.75,winT=4.35,panelL=roofCenter+.47;
+   box(hut,winL-panelL,2.14,.11,(panelL+winL)/2,3.58,z,timber);
+   box(hut,eastWall-winR,2.14,.11,(winR+eastWall)/2,3.58,z,timber);
+   box(hut,winR-winL,winB-2.51,.11,(winL+winR)/2,(2.51+winB)/2,z,timber);
+   box(hut,winR-winL,4.65-winT,.11,(winL+winR)/2,(winT+4.65)/2,z,timber);
+   windowBay(hut,winR-winL,winT-winB,(winL+winR)/2,(winB+winT)/2,z,0,true,false).name='attic picture window';
+   box(hut,.94,2.14,.11,roofCenter,3.58,z,timber);
   }
   const gable=new T.BufferGeometry();
   gable.setAttribute('position',new T.Float32BufferAttribute([westWall,eaves,z,eastWall,eaves,z,roofCenter,roofRidge,z],3));gable.computeVertexNormals();
@@ -515,7 +523,7 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  const attic=new T.Group();attic.name='café attic bedroom';hut.add(attic);
  // The stair opening stays clear of the loft floor.
  for(const [left,right] of [[CAFE_LAYOUT.loftEdge,-.65],[.65,eastWall]])box(attic,right-left,.15,-.02-backWall,(left+right)/2,loftHeight-.075,(backWall-.02)/2,timber);
- box(attic,1.30,.15,-1.40-backWall,0,loftHeight-.075,(backWall-1.40)/2,timber);
+ box(attic,1.30,.15,-.02-backWall,0,loftHeight-.075,(backWall-.02)/2,timber);
  box(attic,CAFE_LAYOUT.loftEdge-westWall,.15,stairsBack-backWall,(westWall+CAFE_LAYOUT.loftEdge)/2,loftHeight-.075,(backWall+stairsBack)/2,timber);
  for(let i=0;i<14;i++){
   const run=(stairsFront-stairsBack)/14,rise=(loftHeight-.17)/14;
@@ -575,34 +583,57 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  sheet.name='white bedsheet';sheet.position.y=.46;bed.add(sheet);
  box(bed,1.23,.57,.08,0,.56,-.94,timber);
 
- const pillow=new T.Mesh(new T.SphereGeometry(1,28,18),linen);
- pillow.name='oversized pillow';pillow.position.set(-.065,.59,-.61);
- pillow.scale.set(.46,.22,.30);pillow.rotation.y=-.09;bed.add(pillow);
- const duvetGeometry=new T.PlaneGeometry(1.46,1.20,28,24);
+ // Red wool kambal: quilted top, cream-and-mustard border, sides and foot hanging over the mattress.
+ let kambalTexture=null,cuffTexture=null;
+ if(typeof document!=='undefined'){
+  const c=document.createElement('canvas');c.width=c.height=1024;const g=c.getContext('2d'),r=random(30517);
+  g.fillStyle='#8a2724';g.fillRect(0,0,1024,1024);
+  for(let i=0;i<26000;i++){g.fillStyle=i%3?'#5e141210':'#c0544a14';const x=r()*1024,y=r()*1024;g.fillRect(x,y,1+r()*9,1+r()*1.2);}
+  // Quilting stitches between the tufts.
+  g.strokeStyle='#5c1513';g.lineWidth=2;g.setLineDash([9,7]);
+  for(let k=1;k<6;k++){const u=k/6*1024;g.beginPath();g.moveTo(u,120);g.lineTo(u,904);g.stroke();g.beginPath();g.moveTo(120,u);g.lineTo(904,u);g.stroke();}
+  g.setLineDash([]);
+  // Woven border band.
+  const band=(inset,width,color)=>{g.strokeStyle=color;g.lineWidth=width;g.strokeRect(inset,inset,1024-inset*2,1024-inset*2);};
+  band(70,26,'#ecdcb6');band(52,5,'#d69a2e');band(88,5,'#d69a2e');band(108,3,'#ecdcb6');
+  g.fillStyle='#8a2724';
+  for(let t=96;t<930;t+=38)for(const [x,y] of [[t,70],[t,954],[70,t],[954,t]]){g.save();g.translate(x,y);g.rotate(Math.PI/4);g.fillRect(-5,-5,10,10);g.restore();}
+  kambalTexture=new T.CanvasTexture(c);kambalTexture.colorSpace=T.SRGBColorSpace;kambalTexture.anisotropy=8;
+  const f=document.createElement('canvas');f.width=256;f.height=8;const h=f.getContext('2d');
+  h.fillStyle='#8a2724';h.fillRect(0,0,256,8);h.fillStyle='#ecdcb6';h.fillRect(0,0,40,8);h.fillStyle='#d69a2e';h.fillRect(40,0,6,8);h.fillRect(224,0,6,8);h.fillStyle='#ecdcb6';h.fillRect(230,0,26,8);
+  cuffTexture=new T.CanvasTexture(f);cuffTexture.colorSpace=T.SRGBColorSpace;
+ }
+ const kambalMaterial=new T.MeshPhysicalMaterial({color:kambalTexture?0xffffff:0x8a2724,map:kambalTexture,roughness:.95,sheen:.7,sheenColor:0xd77a6c,sheenRoughness:.7,side:T.DoubleSide});
+ const duvetGeometry=new T.PlaneGeometry(1.60,1.52,76,72);
  duvetGeometry.rotateX(-Math.PI/2);
- const duvetPositions=duvetGeometry.attributes.position;
+ const duvetPositions=duvetGeometry.attributes.position,edgeX=.60,footZ=.58;
  for(let i=0;i<duvetPositions.count;i++){
-  const x=duvetPositions.getX(i),z=duvetPositions.getZ(i);
-  const drape=Math.pow(Math.max(0,(Math.abs(x)-.49)/.225),2)*.23;
-  duvetPositions.setY(i,.041*Math.cos(x*4)+.014*Math.sin(x*16+z*6)-drape);
+  let x=duvetPositions.getX(i),z=duvetPositions.getZ(i);
+  const overSide=Math.max(0,Math.abs(x)-edgeX),overFoot=Math.max(0,z-footZ);
+  const top=Math.max(0,1-overSide/.05)*Math.max(0,1-overFoot/.05);
+  const mound=.05*Math.cos(x*2.4)*Math.cos((z+.1)*1.1);
+  const tuft=-.009*Math.pow(Math.abs(Math.cos(x*Math.PI/.25)*Math.cos(z*Math.PI/.24)),3);
+  const crease=.006*Math.sin(x*9+z*4)+.004*Math.sin(z*13-x*3);
+  const drop=Math.min(.26,(overSide/.20)**1.5*.26)+Math.min(.26,(overFoot/.18)**1.5*.26);
+  // The hanging part tucks in so it falls nearly straight down.
+  if(overSide>0)x=Math.sign(x)*(edgeX+overSide*.85);
+  if(overFoot>0)z=footZ+overFoot*.85;
+  duvetPositions.setXYZ(i,x,mound+(tuft+crease)*(.4+.6*top)-drop+.01*Math.sin(x*18+z*7)*(1-top),z);
  }
  duvetGeometry.computeVertexNormals();
- const duvet=new T.Mesh(duvetGeometry,new T.MeshLambertMaterial({color:0x9e4643,side:T.DoubleSide}));
- duvet.name='rose wool kambal';duvet.position.set(0,.519,.255);bed.add(duvet);
- const fold=new T.Mesh(new T.CylinderGeometry(.048,.048,1.24,16),new T.MeshLambertMaterial({color:0xb35a54}));
- fold.rotation.z=Math.PI/2;fold.position.set(0,.549,-.32);bed.add(fold);
- const hem=new T.MeshLambertMaterial({color:0xd0a0a0});
- for(let i=0;i<20;i++){
-  const x=-.60+i*.064;
-  const tassel=box(bed,.015,.060,.014,x,.509+.036*Math.cos(x*4),.864,hem);
-  tassel.rotation.x=.30;
+ const duvet=new T.Mesh(duvetGeometry,kambalMaterial);duvet.castShadow=duvet.receiveShadow=true;
+ duvet.name='rose wool kambal';duvet.position.set(0,.475,.30);bed.add(duvet);
+ // Turned-down cuff at the head end.
+ const fold=new T.Mesh(new T.CylinderGeometry(.05,.05,1.42,28,1),new T.MeshPhysicalMaterial({color:cuffTexture?0xffffff:0x8a2724,map:cuffTexture,roughness:.95,sheen:.7,sheenColor:0xd77a6c}));
+ fold.name='kambal folded cuff';fold.rotation.set(-Math.PI/2.4,0,Math.PI/2);fold.scale.set(.5,1,1);fold.position.set(0,.515,-.42);bed.add(fold);
+ const hem=new T.MeshLambertMaterial({color:0xecdcb6});
+ for(let i=0;i<22;i++){
+  const x=-.63+i*.06;
+  const tassel=box(bed,.012,.05,.012,x,.475+.05*Math.cos(x*2.4)*Math.cos(.86*1.1)-.26-.024,.30+footZ+.18*.85+.004,hem);
+  tassel.rotation.x=.05;
  }
 
- const nightstand=new T.Group();nightstand.name='attic side table';nightstand.position.set(1.52,loftHeight,-1.70);attic.add(nightstand);
- box(nightstand,.45,.07,.47,0,.42,0,timber);
- for(const x of [-.17,.17])for(const z of [-.17,.17])box(nightstand,.052,.42,.052,x,.21,z,timber);
- for(const [x,r,h,color] of [[-.10,.055,.065,0xe6d9c9],[.09,.045,.10,0xb5c4ae]]){const jar=new T.Mesh(new T.CylinderGeometry(r,r,h,20),new T.MeshStandardMaterial({color,roughness:.35}));jar.name='night cream jar';jar.position.set(x,.49+h/2,0);nightstand.add(jar);const lid=new T.Mesh(new T.CylinderGeometry(r*1.04,r*1.04,.018,20),new T.MeshStandardMaterial({color:0xc8ac80,roughness:.5}));lid.position.set(x,.50+h,0);nightstand.add(lid);}
- const bedroomLamp=new T.Group();bedroomLamp.name='poppy paper bedside lamp';bedroomLamp.position.set(-.85,loftHeight+.90,-2.63);attic.add(bedroomLamp);
+ const bedroomLamp=new T.Group();bedroomLamp.name='poppy paper bedside lamp';bedroomLamp.position.set(-.85,loftHeight+.5675,-2.63);attic.add(bedroomLamp);
  let poppyTexture=null;
  if(typeof document!=='undefined'){
   const c=document.createElement('canvas');c.width=c.height=384;const g=c.getContext('2d');g.fillStyle='#e4a545';g.fillRect(0,0,384,384);
@@ -661,20 +692,21 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
   for(let k=0;k<5;k++){const a=k*2.4,stamen=new T.Mesh(new T.CylinderGeometry(.0015,.0015,.052,5),lilyStemMat);stamen.position.set(Math.cos(a)*.012,.030,Math.sin(a)*.012);flower.add(stamen);const pollen=new T.Mesh(new T.SphereGeometry(.004,6,4),pollenMat);pollen.position.set(Math.cos(a)*.012,.057,Math.sin(a)*.012);flower.add(pollen);}
  }
 
- const loftWindow=new T.Mesh(new T.PlaneGeometry(.92,.67),glass);
- loftWindow.position.set(-.67,3.55,frontWall+.057);hut.add(loftWindow);
  // Desk faces the river, with an open laptop and a proper chair.
- const desk=box(hut,1.3,.08,1.10,1,.91,.95,timber);desk.name='shared study table';
- for(const x of [.45,1.55])for(const z of [.48,1.42])box(hut,.055,.70,.055,x,.52,z,timber);
+ // Long study table in the middle of the café, near the kitchen, facing east toward the river and waterfall as before.
+ // Local +x is the far side (east), local +z the sitter's right.
+ const studyDesk=new T.Group();studyDesk.name='study table and things on it';studyDesk.position.set(.88,0,-1.10);hut.add(studyDesk);
+ const desk=box(studyDesk,.66,.08,1.52,0,.91,0,timber);desk.name='shared study table';
+ for(const x of [-.28,.28])for(const z of [-.70,.70])box(studyDesk,.055,.70,.055,x,.52,z,timber);
  const metal=new T.MeshStandardMaterial({color:0x727e8f,roughness:.8});
- const laptop=new T.Group();laptop.name='open-laptop';laptop.position.set(1,.97,.95);laptop.rotation.y=-Math.PI/2;hut.add(laptop);
+ const laptop=new T.Group();laptop.name='open-laptop';laptop.position.set(-.02,.97,0);laptop.rotation.y=-Math.PI/2;studyDesk.add(laptop);
  box(laptop,.55,.025,.36,0,0,0,metal);
  const lid=new T.Group();lid.position.set(0,.02,-.17);lid.rotation.x=-.15;laptop.add(lid);box(lid,.55,.34,.025,0,.17,0,metal);
  const screenMat=new T.MeshStandardMaterial({color:0xa8c5ca,emissive:0x90bccb,emissiveIntensity:.7,roughness:1});box(lid,.49,.28,.008,0,.17,.017,screenMat);
  const ink=new T.MeshBasicMaterial({color:0x4a6d7b});for(let i=0;i<5;i++)box(lid,.27+(i%2)*.1,.009,.004,-.035,.25-i*.035,.023,ink);
  const studyChairs=[];
- for(const z of [.95]){
-  const chair=new T.Group();chair.name='study table chair';chair.position.set(.05,0,z);hut.add(chair);studyChairs.push(chair);
+ for(const z of [0]){
+  const chair=new T.Group();chair.name='study table chair';chair.position.set(-.62,0,z);studyDesk.add(chair);studyChairs.push(chair);
   box(chair,.50,.07,.50,0,.60,0,timber);box(chair,.055,.40,.50,-.225,.83,0,timber);
   for(const x of [-.21,.21])for(const pz of [-.21,.21])box(chair,.04,.40,.04,x,.37,pz,timber);
   box(chair,.52,.045,.045,0,.38,-.22,timber);
@@ -792,25 +824,94 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
   const rear=box(redSofa,.052,.88,.055,side*.40,.44,-.26,sofaWood);rear.rotation.x=-.10;
   box(redSofa,.07,.045,.69,side*.40,.69,.015,sofaWood);
  }
- // Soft upholstered arms and a small lumbar cushion, without a throw.
+
+ // Soft upholstered arms; the yellow cushion is added with the lamp below.
  for(const side of [-1,1]){const arm=new T.Mesh(sofaCushionG,sofaFabric);arm.position.set(side*.38,.67,.015);arm.scale.set(.085,.105,.34);redSofa.add(arm);}
- const lumbar=new T.Mesh(sofaCushionG,new T.MeshStandardMaterial({color:0xdba282,roughness:1}));lumbar.name='soft lumbar pillow';lumbar.position.set(.04,.68,-.08);lumbar.scale.set(.25,.13,.095);lumbar.rotation.z=-.08;redSofa.add(lumbar);
- // Tall curved floor lamp with a ribbed paper dome and stone base.
- const floorLamp=new T.Group();floorLamp.name='curved reading floor lamp';floorLamp.position.set(-3.98,.17,-2.05);floorLamp.rotation.y=Math.PI;listeningNook.add(floorLamp);
+ // Tall curved floor lamp with a red-ribbed paper dome and stone base. Also used in the attic corner.
  const lampBrass=new T.MeshStandardMaterial({color:0xa78c55,metalness:.45,roughness:.65}),lampStone=new T.MeshStandardMaterial({map:textures.stone||null,color:0xd5cdb8,roughness:.84});
- cylinder(floorLamp,.17,.055,0,.035,0,lampStone);
- const arcCurve=new T.CatmullRomCurve3([[0,.06,0],[0,1.06,0],[-.035,1.62,0],[-.22,1.95,0],[-.55,2.08,0]].map(p=>new T.Vector3(...p)));
- floorLamp.add(new T.Mesh(new T.TubeGeometry(arcCurve,44,.014,8,false),lampBrass));
+ const lampRibRed=new T.MeshStandardMaterial({color:0xb3261e,emissive:0x8a1a14,emissiveIntensity:.35,roughness:.7});
  const shadeProfile=[[.015,1.94],[.10,1.91],[.21,1.83],[.29,1.70],[.32,1.58]].map(p=>new T.Vector2(...p));
  const floorShadeMaterial=new T.MeshStandardMaterial({color:0xe9cc91,emissive:0xffd399,emissiveIntensity:.25,roughness:1,side:T.DoubleSide});
- const floorShade=new T.Mesh(new T.LatheGeometry(shadeProfile,48),floorShadeMaterial);floorShade.position.x=-.55;floorLamp.add(floorShade);
- for(let rib=0;rib<28;rib++){
-  const a=rib*Math.PI*2/28,points=shadeProfile.map(p=>new T.Vector3(-.55+Math.cos(a)*p.x,p.y,Math.sin(a)*p.x));
-  floorLamp.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(points),12,.0018,4,false),lampBrass));
+ const lampArcG=new T.TubeGeometry(new T.CatmullRomCurve3([[0,.06,0],[0,1.06,0],[-.035,1.62,0],[-.22,1.95,0],[-.55,2.08,0]].map(p=>new T.Vector3(...p))),44,.014,8,false);
+ const floorShadeG=new T.LatheGeometry(shadeProfile,48);
+ const shadeRibGs=Array.from({length:28},(_,rib)=>{const a=rib*Math.PI*2/28;return new T.TubeGeometry(new T.CatmullRomCurve3(shadeProfile.map(p=>new T.Vector3(-.55+Math.cos(a)*p.x,p.y,Math.sin(a)*p.x))),12,.0018,4,false);});
+ const lampPullCordG=new T.CylinderGeometry(.0016,.0016,.38,5),lampPullCapG=new T.CylinderGeometry(.007,.011,.018,10),lampPullBeadG=new T.SphereGeometry(.018,14,10),lampPullHitG=new T.CylinderGeometry(.08,.08,.40,8);
+ const lampPullCord=new T.MeshStandardMaterial({color:0xe8dcc0,roughness:1}),lampPullHit=new T.MeshBasicMaterial({visible:false});
+ const lampSwitches=[],lampTargets=[];
+ function toggleLamp(pull){
+  const d=pull.userData;d.on=!d.on;d.tug=1;
+  if(d.baseIntensity===null)d.baseIntensity=d.light.intensity;
+  d.light.intensity=d.on?d.baseIntensity:0;d.shade.material.emissiveIntensity=d.on?.25:.02;
+  return d.on;
  }
- const rim=new T.Mesh(new T.TorusGeometry(.32,.004,5,48),lampBrass);rim.rotation.x=Math.PI/2;rim.position.set(-.55,1.58,0);floorLamp.add(rim);
- const lampHanger=new T.Mesh(new T.CylinderGeometry(.004,.004,.14,5),lampBrass);lampHanger.position.set(-.55,2.01,0);floorLamp.add(lampHanger);
- const readingLight=new T.SpotLight(0xffd2a0,3,4,Math.PI*.30,.9,2);readingLight.position.set(-.55,1.65,0);floorLamp.add(readingLight);readingLight.target.position.set(-3.55,.65,-2.65);cafe.add(readingLight.target);
+ function buildFloorLamp(parent,name,x,y,z,rotationY){
+  const lamp=new T.Group();lamp.name=name;lamp.position.set(x,y,z);lamp.rotation.y=rotationY;parent.add(lamp);
+  cylinder(lamp,.17,.055,0,.035,0,lampStone);
+  lamp.add(new T.Mesh(lampArcG,lampBrass));
+  const shade=new T.Mesh(floorShadeG,floorShadeMaterial.clone());shade.position.x=-.55;lamp.add(shade);
+  for(const g of shadeRibGs)lamp.add(new T.Mesh(g,lampRibRed));
+  const rim=new T.Mesh(new T.TorusGeometry(.32,.004,5,48),lampRibRed);rim.rotation.x=Math.PI/2;rim.position.set(-.55,1.58,0);lamp.add(rim);
+  const hanger=new T.Mesh(new T.CylinderGeometry(.004,.004,.14,5),lampBrass);hanger.position.set(-.55,2.01,0);lamp.add(hanger);
+  const light=new T.SpotLight(0xffd2a0,3,4,Math.PI*.30,.9,2);light.position.set(-.55,1.65,0);lamp.add(light);
+  // Pull-cord switch: a cord from the socket ends in a red wooden bead with a brass cap. Clicking it toggles the lamp.
+  const pull=new T.Group();pull.name='lamp pull switch';pull.position.set(-.55,1.73,0);lamp.add(pull);
+  const cord=new T.Mesh(lampPullCordG,lampPullCord);cord.position.y=-.19;pull.add(cord);
+  const cap=new T.Mesh(lampPullCapG,lampBrass);cap.position.y=-.385;pull.add(cap);
+  const bead=new T.Mesh(lampPullBeadG,lampRibRed);bead.position.y=-.425;bead.scale.y=1.35;pull.add(bead);
+  const hit=new T.Mesh(lampPullHitG,lampPullHit);hit.position.y=-.30;pull.add(hit);
+  pull.userData={lampSwitch:true,on:true,tug:0,light,shade,baseIntensity:null};lampSwitches.push(pull);
+  shade.userData.lampPull=pull;lamp.userData.lampPull=pull;lampTargets.push(pull,shade);
+  return {lamp,light};
+ }
+ const {lamp:floorLamp,light:readingLight}=buildFloorLamp(listeningNook,'curved reading floor lamp',-3.98,.17,-2.05,Math.PI);
+ readingLight.target.position.set(-3.55,.65,-2.65);cafe.add(readingLight.target);
+ // The same lamp stands beside the bed head, by the flower clock, arching over the pillows.
+ const {light:atticReadingLight}=buildFloorLamp(attic,'attic curved floor lamp',1.05,loftHeight,-3.02,Math.PI);
+ atticReadingLight.intensity=2.2;atticReadingLight.target.position.set(1.9,loftHeight+.55,-2.6);attic.add(atticReadingLight.target);
+ // Fluffy square yellow cushions with hand-embroidered stitching: one on the armchair, one on the attic bed.
+ const embroideryCanvas=typeof document!=='undefined'?document.createElement('canvas'):null;let embroideryTexture=null;
+ if(embroideryCanvas){
+  embroideryCanvas.width=embroideryCanvas.height=512;const g=embroideryCanvas.getContext('2d'),r=random(7741);
+  g.fillStyle='#e8b43a';g.fillRect(0,0,512,512);
+  for(let i=0;i<9000;i++){g.fillStyle=i%2?'#fff3c418':'#8a5a0a14';g.fillRect(r()*512,r()*512,1+r()*6,1);}
+  const thread=(color,width)=>{g.strokeStyle=color;g.lineWidth=width;g.lineCap='round';};
+  const stitch=(x1,y1,x2,y2)=>{g.beginPath();g.moveTo(x1+(r()-.5)*2,y1+(r()-.5)*2);g.lineTo(x2+(r()-.5)*2,y2+(r()-.5)*2);g.stroke();};
+  // Running-stitch border.
+  thread('#b3261e',5);
+  for(const inset of [44,64])for(let t=inset;t<512-inset-10;t+=22){stitch(t,inset,t+12,inset);stitch(t,512-inset,t+12,512-inset);stitch(inset,t,inset,t+12);stitch(512-inset,t,512-inset,t+12);}
+  // Lazy-daisy flower in the middle.
+  for(let k=0;k<8;k++){const a=k*Math.PI/4;g.save();g.translate(256,256);g.rotate(a);thread('#fff4dc',6);g.beginPath();g.ellipse(0,-58,17,40,0,0,Math.PI*2);g.stroke();thread('#b3261e',4);stitch(0,-22,0,-90);g.restore();}
+  g.fillStyle='#b3261e';for(let k=0;k<14;k++){const a=k*2.4,d=6+k*1.3;g.beginPath();g.arc(256+Math.cos(a)*d,256+Math.sin(a)*d,5,0,Math.PI*2);g.fill();}
+  // Leafy sprigs and french knots in the corners.
+  for(const [cx,cy,rot] of [[130,130,.8],[382,130,2.35],[130,382,-.8],[382,382,-2.35]]){
+   g.save();g.translate(cx,cy);g.rotate(rot);thread('#4d6b3a',4);stitch(-34,0,34,0);
+   for(let k=-2;k<=2;k++){stitch(k*13,0,k*13+9,-14);stitch(k*13,0,k*13+9,14);}
+   g.restore();g.fillStyle='#fff4dc';for(let k=0;k<5;k++){g.beginPath();g.arc(cx+(r()-.5)*40,cy+(r()-.5)*40,4.5,0,Math.PI*2);g.fill();}
+  }
+  // Cross stitches scattered between the motifs.
+  thread('#b3261e',3.5);for(const [x,y] of [[256,96],[256,416],[96,256],[416,256]]){stitch(x-9,y-9,x+9,y+9);stitch(x+9,y-9,x-9,y+9);}
+  embroideryTexture=new T.CanvasTexture(embroideryCanvas);embroideryTexture.colorSpace=T.SRGBColorSpace;embroideryTexture.anisotropy=4;
+ }
+ const cushionFabric=new T.MeshPhysicalMaterial({color:0xffffff,map:embroideryTexture,roughness:1,sheen:.8,sheenColor:0xffe3a0,sheenRoughness:.6});
+ if(!embroideryTexture)cushionFabric.color.set(0xe8b43a);
+ // A square box puffed into a pillow: plump in the middle, pinched seams and soft corner ears.
+ const fluffyCushionG=new T.BoxGeometry(2,2,2,28,28,6);
+ {const q=fluffyCushionG.attributes.position;
+  for(let i=0;i<q.count;i++){
+   const x=q.getX(i),y=q.getY(i),z=q.getZ(i),side=Math.sign(z)||1,face=Math.abs(z);
+   const puff=Math.pow(Math.max(0,(1-x*x)*(1-y*y)),.55);
+   const ripple=.035*Math.sin(x*5.3+y*2.1)*Math.sin(y*4.7-x*1.3);
+   const pinch=1-.07*(1-Math.abs(y))*Math.abs(x)**6-.07*(1-Math.abs(x))*Math.abs(y)**6;
+   q.setXYZ(i,x*pinch,y*pinch,side*face*(.46*puff+ripple*puff));
+  }
+  fluffyCushionG.computeVertexNormals();}
+ function makeYellowCushion(parent,name,size){
+  const c=new T.Mesh(fluffyCushionG,cushionFabric);c.name=name;c.scale.set(size/2,size/2,size/2);c.castShadow=true;c.receiveShadow=true;parent.add(c);return c;
+ }
+ const chairCushion=makeYellowCushion(redSofa,'yellow embroidered cushion',.40);chairCushion.position.set(.03,.74,-.10);chairCushion.rotation.set(-.24,0,-.06);
+ for(const [x,y,z,size,tilt,turn,roll] of [[-.27,.70,-.71,.48,-.30,.08,.04],[.27,.70,-.71,.48,-.30,-.07,-.05],[-.20,.65,-.53,.40,-.48,.14,-.07],[.22,.65,-.53,.40,-.48,-.12,.08]]){
+  const c=makeYellowCushion(bed,'yellow embroidered cushion on the bed',size);c.position.set(x,y,z);c.rotation.set(tilt,turn,roll);
+ }
  // Ceramic flower clock hangs above the corner books without covering the stairs.
  const flowerClock=new T.Group();flowerClock.name='green ceramic flower clock';flowerClock.position.set(.65,loftHeight+1.35,-3.325);attic.add(flowerClock);
  const clockOutline=[];const clockShape=new T.Shape();
@@ -856,40 +957,81 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  for(const y of [-.29,.29]){const rim=new T.Mesh(new T.TorusGeometry(.082,.006,5,24),lanternWire);rim.rotation.x=Math.PI/2;rim.position.y=y;paperLantern.add(rim);}
  const cord=new T.Mesh(new T.CylinderGeometry(.006,.006,.10,6),lanternWire);cord.position.y=.34;paperLantern.add(cord);
  const cafeLight=new T.PointLight(0xffd4a0,.8,7.5,2);cafeLight.position.copy(paperLantern.position);hut.add(cafeLight);
- const deskLamp=new T.Group();deskLamp.name='yellow table lamp';deskLamp.position.set(1.42,.96,.67);deskLamp.scale.y=1.55;hut.add(deskLamp);
+ const deskLamp=new T.Group();deskLamp.name='yellow table lamp';deskLamp.position.set(.165,1.07,-.52);deskLamp.scale.y=1.55;studyDesk.add(deskLamp);
  cylinder(deskLamp,.11,.026,0,.02,0,brassMat);cylinder(deskLamp,.015,.31,0,.17,0,brassMat);
  const yellowShade=new T.Mesh(new T.CylinderGeometry(.075,.15,.15,18,1,true),new T.MeshStandardMaterial({color:0xffd36a,emissive:0xffb640,emissiveIntensity:.48,side:T.DoubleSide}));
  yellowShade.position.y=.36;deskLamp.add(yellowShade);
- const deskLight=new T.SpotLight(0xffd6a1,2.5,3,Math.PI*.34,.85,2);deskLight.position.y=.30;deskLamp.add(deskLight);deskLight.target.position.set(1.02,.93,.98);hut.add(deskLight.target);
- const studyAlarm=new T.Group();studyAlarm.name='digital Pomodoro alarm clock';studyAlarm.position.set(1.35,.96,1.28);studyAlarm.rotation.y=-Math.PI/2;hut.add(studyAlarm);
+ const deskLight=new T.SpotLight(0xffd6a1,2.5,3,Math.PI*.34,.85,2);deskLight.position.y=.30;deskLamp.add(deskLight);deskLight.target.position.set(-.05,.93,-.2);studyDesk.add(deskLight.target);
+ const studyAlarm=new T.Group();studyAlarm.name='digital Pomodoro alarm clock';studyAlarm.position.set(.17,.96,.48);studyAlarm.rotation.y=-Math.PI/2;studyDesk.add(studyAlarm);
  const alarmCase=new T.MeshStandardMaterial({color:0xb5654d,roughness:.65});box(studyAlarm,.36,.19,.12,0,.12,0,alarmCase);for(const x of [-.12,.12])box(studyAlarm,.035,.035,.07,x,.015,0,alarmCase);
  let alarmCanvas,alarmTexture,alarmLast='';if(typeof document!=='undefined'){alarmCanvas=document.createElement('canvas');alarmCanvas.width=512;alarmCanvas.height=192;alarmTexture=new T.CanvasTexture(alarmCanvas);alarmTexture.colorSpace=T.SRGBColorSpace;}
  const alarmDisplay=new T.Mesh(new T.PlaneGeometry(.31,.13),new T.MeshBasicMaterial({map:alarmTexture,color:alarmTexture?0xffffff:0x25332d}));alarmDisplay.position.set(0,.12,.061);studyAlarm.add(alarmDisplay);
  function setStudyTimer(text,phase){if(!alarmCanvas||alarmLast===text+phase)return;alarmLast=text+phase;const c=alarmCanvas.getContext('2d');c.fillStyle='#202d29';c.fillRect(0,0,512,192);c.fillStyle='#e5cf91';c.textAlign='center';c.font='100px monospace';c.fillText(text,256,128);c.font='22px monospace';c.fillText(phase.toUpperCase(),256,167);alarmTexture.needsUpdate=true;}
  setStudyTimer('25:00','study');
  // A tiny hand-painted ceramic coffee cup and two desk books.
- const studyBooks=new T.Group();studyBooks.name='study table books';studyBooks.position.set(1.57,.96,1.28);hut.add(studyBooks);
+ const studyBooks=new T.Group();studyBooks.name='study table books';studyBooks.position.set(.165,.96,-.52);studyBooks.rotation.y=0;studyDesk.add(studyBooks);
  box(studyBooks,.30,.045,.21,0,.023,0,new T.MeshStandardMaterial({color:0x789084,roughness:1}));
  box(studyBooks,.28,.035,.20,.025,.063,.015,new T.MeshStandardMaterial({color:0xc9816c,roughness:1}));
- const studyCup=new T.Group();studyCup.name='ceramic green tea cup';studyCup.position.set(1.10,.96,1.36);hut.add(studyCup);
+ const studyCup=new T.Group();studyCup.name='ceramic green tea cup';studyCup.position.set(-.15,.96,.45);studyCup.rotation.y=-Math.PI/2;studyDesk.add(studyCup);
  const ceramic=new T.MeshPhysicalMaterial({color:0xf1dec4,roughness:.30,clearcoat:.55,clearcoatRoughness:.22});
  const cupProfile=[[.044,0],[.058,.012],[.066,.09],[.063,.115],[.053,.115],[.053,.028]].map(p=>new T.Vector2(...p));studyCup.add(new T.Mesh(new T.LatheGeometry(cupProfile,32),ceramic));
  const handle=new T.Mesh(new T.TorusGeometry(.038,.009,8,24),ceramic);handle.position.set(.074,.065,0);studyCup.add(handle);
  cylinder(studyCup,.052,.004,0,.101,0,new T.MeshStandardMaterial({color:0x8b9c42,roughness:.25}));cylinder(studyCup,.09,.009,0,.004,0,ceramic);
- const petalMat=new T.MeshStandardMaterial({color:0xb56d57,roughness:.5});
- for(let j=0;j<5;j++){const a=j*Math.PI*2/5,petal=new T.Mesh(new T.SphereGeometry(.009,8,6),petalMat);petal.scale.set(.7,1.4,.35);petal.position.set(Math.sin(a)*.012,.064+Math.cos(a)*.012,.061);studyCup.add(petal);}
+ // Hand-painted cup art: a small heart at night, a hen's face in the daytime.
+ let cupHeart=null,cupHen=null;
+ if(typeof document!=='undefined'){
+  const paint=draw=>{const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.lineCap=g.lineJoin='round';draw(g);const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;t.anisotropy=4;return t;};
+  cupHeart=paint(g=>{
+   g.translate(128,136);g.scale(1.1,1.1);g.fillStyle='#5e1a24';g.beginPath();g.moveTo(0,34);g.bezierCurveTo(-46,6,-44,-30,-20,-34);g.bezierCurveTo(-8,-36,-2,-28,0,-18);g.bezierCurveTo(2,-28,8,-36,20,-34);g.bezierCurveTo(44,-30,46,6,0,34);g.fill();
+   g.fillStyle='#7a2a33';g.beginPath();g.ellipse(-18,-18,6,3.5,-.6,0,Math.PI*2);g.fill();
+  });
+  cupHen=paint(g=>{
+   g.translate(128,146);g.scale(1.45,1.45);
+   g.fillStyle='#c9433b';for(const [x,y,r] of [[-24,-58,15],[-3,-66,17],[19,-58,14]]){g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill();}
+   g.fillStyle='#fffaf0';g.strokeStyle='#7a5a44';g.lineWidth=5;g.beginPath();g.ellipse(0,-4,58,54,0,0,Math.PI*2);g.fill();g.stroke();
+   g.fillStyle='#f2b6a6';for(const x of [-34,34]){g.beginPath();g.ellipse(x,8,11,7,0,0,Math.PI*2);g.fill();}
+   g.fillStyle='#2b2420';for(const x of [-20,20]){g.beginPath();g.arc(x,-14,6.5,0,Math.PI*2);g.fill();}
+   g.fillStyle='#fffaf0';for(const x of [-18,22]){g.beginPath();g.arc(x,-16,2,0,Math.PI*2);g.fill();}
+   g.fillStyle='#eaa33a';g.beginPath();g.moveTo(-12,0);g.lineTo(12,0);g.lineTo(0,18);g.closePath();g.fill();
+   g.fillStyle='#c9433b';g.beginPath();g.ellipse(0,30,8,11,0,0,Math.PI*2);g.fill();
+  });
+ }
+ const cupArt=new T.Mesh(new T.CylinderGeometry(.0668,.0598,.088,28,1,true,-.72,1.44),new T.MeshStandardMaterial({map:cupHen,transparent:true,alphaTest:.4,roughness:.3,emissive:0xffffff,emissiveIntensity:0,side:T.FrontSide}));
+ cupArt.name='painted cup art';cupArt.position.y=.057;cupArt.visible=Boolean(cupHen);studyCup.add(cupArt);
+ function updateCupArt(){if(!cupHen)return;const night=current.night>.5,map=night?cupHeart:cupHen;if(cupArt.material.map!==map){cupArt.material.map=map;cupArt.material.emissiveMap=map;cupArt.material.needsUpdate=true;}cupArt.material.emissiveIntensity=0;}
  const coffeeSteam=new T.Group();coffeeSteam.name='timer coffee steam';coffeeSteam.visible=false;studyCup.add(coffeeSteam);
  for(let j=0;j<3;j++){const points=[];for(let i=0;i<=16;i++){const y=i/16;points.push(new T.Vector3(Math.sin(y*8+j)*.014+(j-1)*.025,.13+y*.26,Math.cos(y*7+j)*.008));}const m=new T.MeshBasicMaterial({color:0xf8f4df,transparent:true,opacity:.48,depthWrite:false});coffeeSteam.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(points),24,.005,4,false),m));}
  function setStudyActive(active){coffeeSteam.visible=Boolean(active);}
+ // An open notebook of white pages, a closed book and three pencils on the left of the laptop.
+ let pageTexture=null;
+ if(typeof document!=='undefined'){const c=document.createElement('canvas');c.width=256;c.height=192;const g=c.getContext('2d');g.fillStyle='#fbf8f1';g.fillRect(0,0,256,192);g.strokeStyle='#c9d6de';g.lineWidth=1.5;for(let y=30;y<180;y+=14){g.beginPath();g.moveTo(14,y);g.lineTo(242,y);g.stroke();}g.strokeStyle='#4a4f5c';g.lineWidth=1.6;g.beginPath();let x=20;g.moveTo(x,41);for(let i=0;i<40;i++){x+=4;g.lineTo(x,41-Math.abs(Math.sin(i*1.7))*5);}g.stroke();pageTexture=new T.CanvasTexture(c);pageTexture.colorSpace=T.SRGBColorSpace;}
+ const studyNotebook=new T.Group();studyNotebook.name='open notebook with white pages';studyNotebook.position.set(-.135,.955,-.47);studyNotebook.rotation.y=.10;studyDesk.add(studyNotebook);
+ const pageMat=new T.MeshStandardMaterial({color:0xffffff,map:pageTexture,roughness:.95});
+ box(studyNotebook,.23,.006,.33,0,.003,0,new T.MeshStandardMaterial({color:0x7a8f86,roughness:.9})).name='notebook cover';
+ for(const side of [-1,1]){const page=new T.Mesh(new T.PlaneGeometry(.155,.21,6,1),pageMat);const q=page.geometry.attributes.position;for(let i=0;i<q.count;i++){const u=Math.abs(q.getX(i)+side*.0775)/.155;q.setZ(i,.012*Math.sin(Math.min(1,u*1.3)*Math.PI*.5));}page.geometry.computeVertexNormals();page.rotation.set(-Math.PI/2,0,Math.PI/2);page.position.set(0,.008,side*.0805);studyNotebook.add(page);}
+ box(studyNotebook,.215,.004,.004,0,.012,0,new T.MeshStandardMaterial({color:0xcfc6b4})).name='notebook spine';
+ const closedBook=new T.Group();closedBook.name='closed hardcover book';closedBook.position.set(.165,1.04,-.52);closedBook.rotation.y=.06;studyDesk.add(closedBook);
+ box(closedBook,.17,.032,.24,0,.016,0,new T.MeshStandardMaterial({color:0x34506b,roughness:.85}));
+ box(closedBook,.162,.026,.232,.006,.016,0,new T.MeshStandardMaterial({color:0xf1e9d6,roughness:1}));
+ box(closedBook,.004,.034,.12,-.087,.017,0,new T.MeshStandardMaterial({color:0xc8a24f,metalness:.4,roughness:.5}));
+ const pencilWood=new T.MeshStandardMaterial({color:0xe8c99a,roughness:.8}),pencilLead=new T.MeshStandardMaterial({color:0x2d2d2d}),eraser=new T.MeshStandardMaterial({color:0xe79a9a,roughness:.9}),ferrule=new T.MeshStandardMaterial({color:0xb8b2a2,metalness:.6,roughness:.4});
+ for(const [x,z,turn,color] of [[-.19,-.67,.06,0xe6b83a],[-.18,-.70,-.04,0x5f8f6a],[-.20,-.73,.10,0xc4574d]]){
+  const pencil=new T.Group();pencil.name='pencil';pencil.position.set(x,.962,z);pencil.rotation.set(0,turn,Math.PI/2);studyDesk.add(pencil);
+  const body=new T.Mesh(new T.CylinderGeometry(.0045,.0045,.15,6),new T.MeshStandardMaterial({color,roughness:.6}));pencil.add(body);
+  const tip=new T.Mesh(new T.ConeGeometry(.0045,.022,6),pencilWood);tip.position.y=.086;pencil.add(tip);
+  const lead=new T.Mesh(new T.ConeGeometry(.0016,.007,6),pencilLead);lead.position.y=.0965;pencil.add(lead);
+  const band=new T.Mesh(new T.CylinderGeometry(.0048,.0048,.008,8),ferrule);band.position.y=-.079;pencil.add(band);
+  const rub=new T.Mesh(new T.CylinderGeometry(.0046,.0046,.009,8),eraser);rub.position.y=-.0875;pencil.add(rub);
+ }
  // Warm/cool separation gives the café a soft window fill and amber practical lamps.
  const windowFill=new T.PointLight(0xc5d9e1,.65,6,2);windowFill.position.set(2.35,2.05,.85);hut.add(windowFill);
  const contactShadows=new T.Group();contactShadows.name='soft cafe contact shadows';hut.add(contactShadows);
  let contactTexture=null;
  if(typeof document!=='undefined'){const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d'),gradient=g.createRadialGradient(64,64,5,64,64,64);gradient.addColorStop(0,'rgba(40,29,23,.40)');gradient.addColorStop(.45,'rgba(40,29,23,.22)');gradient.addColorStop(1,'rgba(40,29,23,0)');g.fillStyle=gradient;g.fillRect(0,0,128,128);contactTexture=new T.CanvasTexture(c);contactTexture.colorSpace=T.SRGBColorSpace;}
  function contact(parent,x,y,z,width,depth,strength=1){if(!contactTexture)return;const mat=new T.MeshBasicMaterial({map:contactTexture,transparent:true,opacity:strength,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1});const m=new T.Mesh(new T.PlaneGeometry(width,depth),mat);m.name='soft contact shadow';m.rotation.x=-Math.PI/2;m.position.set(x,y,z);m.renderOrder=1;parent.add(m);}
- contact(contactShadows,1,.177,.95,1.65,1.45,.8);contact(contactShadows,.05,.178,.95,.85,.8,.9);
+ contact(contactShadows,.88,.177,-1.10,.95,1.85,.8);contact(contactShadows,.26,.178,-1.10,.8,.8,.9);
  contact(contactShadows,-3.55,.178,-2.77,1.25,1.1,.9);contact(contactShadows,-3.62,.178,-1.22,1.20,.85,.8);
- contact(hut,1.10,.955,1.36,.27,.26,.7);contact(hut,1.42,.955,.67,.35,.34,.7);contact(hut,1.35,.955,1.28,.43,.22,.6);
+ contact(studyDesk,-.15,.955,.45,.27,.26,.7);contact(studyDesk,.165,.955,-.52,.40,.30,.7);contact(studyDesk,.17,.955,.48,.22,.43,.6);contact(studyDesk,-.135,.954,-.47,.30,.40,.55);
  contact(attic,bedX,loftHeight+.017,bedZ,1.60,2.12,.85);
  // The café projector throws a blank field through the front window onto an outdoor sheet.
  const cinema=new T.Group();cinema.name='outdoor cloth cinema';
@@ -954,15 +1096,16 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
   cinemaSeats.push(new T.Vector3(x,groundY+1.12,z-.045));
  }
 
+ const cinemaPoles=[],ropeTags=[];
  for(const x of [-2,2]){
   const pole=box(cinema,.095,2.83,.1,x,1.42,.08,timber);
-  pole.rotation.z=x<0?.035:-.035;
+  pole.rotation.z=x<0?.035:-.035;cinemaPoles.push(pole);
  }
  const rope=new T.Mesh(new T.TubeGeometry(new T.QuadraticBezierCurve3(
   new T.Vector3(-2,2.79,.02),new T.Vector3(0,2.63,.02),new T.Vector3(2,2.79,.02)
  ),20,.018,5),coffeeMat);
  cinema.add(rope);
- for(const x of [-1.53,-.58,.45,1.46])box(cinema,.065,.13,.049,x,2.7,.012,timber);
+ for(const x of [-1.53,-.58,.45,1.46])ropeTags.push(box(cinema,.065,.13,.049,x,2.7,.012,timber));
  const couchLantern=new T.PointLight(0xe9b182,3.3,5.8,2);
  couchLantern.name='soft cinema seating light';couchLantern.position.set(.16,1.40,-3.3);cinema.add(couchLantern);
  const projector=new T.Group();projector.name='projector inside cafe';
@@ -985,6 +1128,17 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  }));
  projectorBeam.visible=false;cinema.add(projectorBeam);
  let cinemaOpen=false,cinemaProgress=0;
+ // The screen can be raised so it shows through the attic picture window from the bed.
+ const BED_SCREEN_LIFT=1.6;let cinemaLift=0,cinemaLiftTarget=0;
+ function setCinemaLift(lift){cinemaLiftTarget=lift;}
+ function applyCinemaLift(){
+  screenRoll.position.y=2.69+cinemaLift;rope.position.y=cinemaLift;
+  for(const pole of cinemaPoles){pole.scale.y=(2.83+cinemaLift)/2.83;pole.position.y=(2.83+cinemaLift)/2;}
+  for(const tag of ropeTags)tag.position.y=2.7+cinemaLift;
+  const beam=projectorBeamGeometry.attributes.position;
+  for(const [i,y] of [[1,.83],[2,.83],[3,2.46],[4,2.46]])beam.setY(i,y+cinemaLift);
+  beam.needsUpdate=true;projectorBeamGeometry.computeBoundingSphere();
+ }
  function setCinemaOpen(open){cinemaOpen=open;hearth.visible=!open;if(open)fireLight.intensity=0;}
  cinema.visible=false;projector.visible=false;
  // A small outdoor hearth gives the laptop nook warm light after dark.
@@ -1036,7 +1190,7 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  for(let i=0;i<8;i++){
   const veil=new T.Sprite(new T.SpriteMaterial({map:veilTexture,color:0xc7c6d6,transparent:true,opacity:.49,depthWrite:false}));
   veil.position.set(fallX+(i-3.5)*1.22,fallHeight+Math.sin(i*1.4)*.65+.4,fallZ+1+i%2*.7);
-  veil.scale.set(5.8+i%3,2.5+i%2*.7,1);waterfall.add(veil);
+  veil.scale.set(5.8+i%3,2.5+i%2*.7,1);waterfall.add(veil);fallMist.push({material:veil.material,color:veil.material.color.clone(),opacity:veil.material.opacity});
  }
 
  const fallStrips=[];
@@ -1521,11 +1675,15 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  function apply(k){hemi.color.lerp(new T.Color(mode==='evening'?0xffd1aa:0x9fb8e0),k);key.color.lerp(new T.Color(mode==='evening'?0xffbf8b:0xa1b8e0),k);for(const field of ['top','low','pink','cream'])skyMaterial.uniforms[field].value.lerp(new T.Color(target[field]).lerp(new T.Color(field==='top'?0x6c8198:0xacb6c3),rainStrength.value*.25),k);scene.fog.color.lerp(new T.Color(target.fog).lerp(new T.Color(0x9aabba),rainStrength.value*.22),k);seasonalWaterColor.set(target.water).lerp(new T.Color(seasonStyle.water),.16*(1-current.night*.65));if(snowing)seasonalWaterColor.lerp(new T.Color(0x425d75),.68);seasonalWaterColor.lerp(new T.Color(0x6d8991),wetness.value*.36);waterMat.color.lerp(seasonalWaterColor,k);pool.material.color.copy(waterMat.color).multiplyScalar(.83);for(const f of ['ambient','key','fill','night'])current[f]+=(target[f]-current[f])*k;hemi.intensity=current.ambient;key.intensity=current.key*(1-rainStrength.value*.35);fill.intensity=current.fill*(1+rainStrength.value*.20);skyMaterial.uniforms.night.value=current.night;skyMaterial.uniforms.moonPhase.value+=(Number(mode==='fullMoon')-skyMaterial.uniforms.moonPhase.value)*k;
  cinema.visible=target.night>0&&(cinemaOpen||cinemaProgress>.015);projector.visible=cinema.visible;}
  function advance(t,dt,quiet=false){
+ updateCupArt();
+ for(const pull of lampSwitches){const d=pull.userData;if(d.tug>0){d.tug=Math.max(0,d.tug-dt*3.2);pull.scale.y=1+.16*Math.sin(d.tug*Math.PI);}}
  blendMonth(dt,quiet);advanceFreeze(dt,quiet);
  if(coffeeSteam.visible)coffeeSteam.children.forEach((s,i)=>{const phase=quiet?.5:(t*.27+i/3)%1;s.position.y=quiet?0:phase*.08;s.material.opacity=quiet?.30:.18+Math.sin(phase*Math.PI)*.38;});updateFlowerClock();apply(1-Math.exp(-dt*5));animateFalling(t);
  for(const m of mistPuffs){m.puff.position.set(m.base.x+Math.sin(t*.13+m.phase)*.8,m.base.y+Math.sin(t*.09+m.phase*2)*.4,m.base.z);}
+ for(const m of fallMist){m.material.color.copy(m.color).lerp(nightMistColor,current.night);m.material.opacity=m.opacity*(1-.65*current.night);}
  animateWeather(quiet?0:t,dt,quiet);
  const cinemaTarget=cinemaOpen?1:0;
+ if(cinemaLift!==cinemaLiftTarget){cinemaLift=quiet||Math.abs(cinemaLiftTarget-cinemaLift)<.002?cinemaLiftTarget:cinemaLift+(cinemaLiftTarget-cinemaLift)*(1-Math.exp(-dt*2.5));applyCinemaLift();}
  cinemaProgress=quiet?cinemaTarget:cinemaProgress+(cinemaTarget-cinemaProgress)*(1-Math.exp(-dt*6));
  screenRoll.scale.y=Math.max(.008,cinemaProgress);
  projectorLid.rotation.x=-cinemaProgress*.81;
@@ -1620,5 +1778,5 @@ for(let i=0;i<flies.length;i++){const b=flies[i],p=b.phase,s=t*b.speed;b.group.v
   floor=hut.position.y+(upper?loftHeight:climb);
  }
  return new T.Vector3(x,floor+1.65,z);}
- return{pondView:new T.Vector3(pondX,heightAt(pondX,pondZ+pondRadius+1.1)+1.65,pondZ+pondRadius+1.1),get frozen(){return month===12||month===1;},get freezeAmount(){return freezeAmount;},get seasonalLife(){return seasonalLife;},studyAlarm,setStudyTimer,studyCup,coffeeSteam,setStudyActive,studyChairs,deskLamp,listeningNook,redSofa,floorLamp,flowerClock,vinyls,vinylCollection,nookView:new T.Vector3(hut.position.x+.70,hut.position.y+1.82,hut.position.z+1.75),cafeBounds:CAFE_LAYOUT,groundObstacles,kitchen,cafeBookcase,scene,root,flies,butterflies,sky,skyMaterial,hemi,key,fill,ground,path,grass,canopy,fringe,water,waterfall,fallStrips,hut,cafe,attic,shelfTarget,upstairsPosition,stairFoot,cafeDoor,toggleDoor,toggleCurtains,cinema,cinemaSeats,projector,setCinemaOpen,movieScreen,projectorBeam,books,musicPlayer,record,flames,fireLight,pool,sourceWater,fallHeight,droplets,currents,ripples,colliders,setTime,setSeason,setMonth,setWeather,get month(){return month;},get snowing(){return snowing;},advance,move,get wetness(){return wetness.value;},get rainIntensity(){return rainStrength.value;},get raining(){return raining;},get weather(){return weather;},get season(){return season;},get mode(){return mode;},get night(){return current.night;}};
+ return{pondView:new T.Vector3(pondX,heightAt(pondX,pondZ+pondRadius+1.1)+1.65,pondZ+pondRadius+1.1),get frozen(){return month===12||month===1;},get freezeAmount(){return freezeAmount;},get seasonalLife(){return seasonalLife;},studyAlarm,setStudyTimer,studyCup,coffeeSteam,setStudyActive,studyChairs,deskLamp,listeningNook,redSofa,floorLamp,flowerClock,vinyls,vinylCollection,nookView:new T.Vector3(hut.position.x+.70,hut.position.y+1.82,hut.position.z+1.75),cafeBounds:CAFE_LAYOUT,groundObstacles,kitchen,cafeBookcase,scene,root,flies,butterflies,sky,skyMaterial,hemi,key,fill,ground,path,grass,canopy,fringe,water,waterfall,fallStrips,hut,cafe,attic,shelfTarget,upstairsPosition,stairFoot,cafeDoor,toggleDoor,toggleCurtains,cinema,cinemaSeats,projector,setCinemaOpen,movieScreen,projectorBeam,deskView:new T.Vector3(hut.position.x+.08,hut.position.y+1.48,hut.position.z-1.10),setCinemaLift,BED_SCREEN_LIFT,bedCinemaView:new T.Vector3(hut.position.x+bedX,hut.position.y+loftHeight+1.2,hut.position.z+bedZ+.55),get cinemaScreenCentre(){return new T.Vector3(cinema.position.x,cinema.position.y+1.63+cinemaLiftTarget,cinema.position.z);},books,musicPlayer,lampSwitches,lampTargets,toggleLamp,record,flames,fireLight,pool,sourceWater,fallHeight,droplets,currents,ripples,colliders,setTime,setSeason,setMonth,setWeather,get month(){return month;},get snowing(){return snowing;},advance,move,get wetness(){return wetness.value;},get rainIntensity(){return rainStrength.value;},get raining(){return raining;},get weather(){return weather;},get season(){return season;},get mode(){return mode;},get night(){return current.night;}};
 }
