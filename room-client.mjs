@@ -22,7 +22,8 @@ export function mountRoom({root,T,world,getView,setSky,setSeason,enterCinema}){
  function showPanel(open){panel.hidden=!open;toggle.setAttribute('aria-expanded',String(open));}
  function describe(text){if(status.textContent!==text)status.textContent=text;}
  async function post(path,data){
-  const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  const endpoint=path.startsWith('/api/rooms/')?'/api/rooms?roomPath='+encodeURIComponent(path.slice('/api/rooms/'.length)):path;
+  const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
   const result=await response.json().catch(()=>null);
   if(!response.ok||!result)throw new Error(result?.error||'Invitations need the room service. On this computer, run npm start in the Little-Stream folder and open http://127.0.0.1:8080. For friends online, this site needs its Node room server hosted publicly.');
   return result;
@@ -168,9 +169,9 @@ export function mountRoom({root,T,world,getView,setSky,setSeason,enterCinema}){
   catch{inviteField.focus();inviteField.select();describe('Copy the selected invite link.');}
  };
  find('[data-room-source-form]').onsubmit=event=>{
-  event.preventDefault();sendControl('source',{url:sourceField.value.trim()});
+  event.preventDefault();const url=sourceField.value.trim();if(/(?:youtu\.be|youtube\.com)/i.test(url)){describe('YouTube links cannot play on the shared screen yet. Use a direct HTTPS MP4/WebM video URL.');return;}sendControl('source',{url});
  };
- find('[data-room-cinema]').onclick=()=>sendControl('cinema',{open:!state.cinema});
+ find('[data-room-cinema]').onclick=async()=>{const opening=!state.cinema;const result=await sendControl('cinema',{open:opening});if(result&&opening)enterCinema();};
  function enablePlayback(){
   enabled=true;movie.muted=false;
   const mediaAtClick=state?.media;

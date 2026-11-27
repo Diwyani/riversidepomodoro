@@ -101,7 +101,7 @@ async function serveFile(req,res,path,contentType,allowRange=false){
 const server=createServer(async(req,res)=>{
  try{
   const url=new URL(req.url,'http://localhost');
-  const route=url.pathname;
+  const route=url.searchParams.get('roomPath')?'/api/rooms/'+url.searchParams.get('roomPath'):url.pathname;
   if((req.method==='GET'||req.method==='HEAD')&&(route==='/'||route==='/index.html'))
    return await serveFile(req,res,join(directory,'index.html'),'text/html; charset=utf-8');
   if((req.method==='GET'||req.method==='HEAD')&&route.startsWith('/media/')){

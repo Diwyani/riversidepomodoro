@@ -112,7 +112,7 @@
  <section class="ls-panel" data-cinema-controls hidden aria-label="Outdoor cinema controls">
   <div class="viz-controls">
    <label class="btn cinema-file-label" data-solo-movie>Choose video<input type="file" accept="video/*,.mp4,.webm,.m4v,.mov" data-cinema-file aria-label="Choose video"></label>
-   <button class="btn" type="button" data-cinema-play hidden>Play</button>
+   <button class="btn" type="button" data-shared-movie hidden>Choose shared video</button><button class="btn" type="button" data-cinema-play hidden>Play</button>
    <button class="btn" type="button" data-cinema-seat="0" aria-pressed="false">Left chair</button>
    <button class="btn" type="button" data-cinema-seat="1" aria-pressed="false">Right chair</button>
    <button class="btn" type="button" data-cinema-bed aria-pressed="false">Watch from bed</button>
@@ -649,7 +649,7 @@ function releaseFilmSurface(){
 }
 function syncCinemaFilm(){
  const shared=Boolean(room?.active);
- $('[data-solo-movie]').hidden=shared;
+ $('[data-solo-movie]').hidden=shared;$('[data-shared-movie]').hidden=!shared;
  if(shared&&(!localFilm.paused||screenMaterial.map===filmTexture)){
   localFilm.pause();releaseFilmSurface();filmMessage('');
  }
@@ -665,6 +665,7 @@ async function playLocalFilm(){
  try{await localFilm.play();}
  catch(error){if(error.name!=='AbortError')filmMessage('Select Play to start, or try a browser-compatible MP4 or WebM.');}
 }
+$('[data-shared-movie]').onclick=()=>{const panel=$('[data-room-panel]');if(panel.hidden)$('[data-room-toggle]').click();$('[data-room-source]').focus();};
 $('[data-cinema-file]').onchange=e=>{
  const file=e.target.files[0];if(!file||room?.active)return;
  localFilm.pause();releaseFilmSurface();

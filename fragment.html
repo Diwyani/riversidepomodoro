@@ -112,7 +112,7 @@
  <section class="ls-panel" data-cinema-controls hidden aria-label="Outdoor cinema controls">
   <div class="viz-controls">
    <label class="btn cinema-file-label" data-solo-movie>Choose video<input type="file" accept="video/*,.mp4,.webm,.m4v,.mov" data-cinema-file aria-label="Choose video"></label>
-   <button class="btn" type="button" data-cinema-play hidden>Play</button>
+   <button class="btn" type="button" data-shared-movie hidden>Choose shared video</button><button class="btn" type="button" data-cinema-play hidden>Play</button>
    <button class="btn" type="button" data-cinema-seat="0" aria-pressed="false">Left chair</button>
    <button class="btn" type="button" data-cinema-seat="1" aria-pressed="false">Right chair</button>
    <button class="btn" type="button" data-cinema-bed aria-pressed="false">Watch from bed</button>
@@ -2192,7 +2192,8 @@ function mountRoom({root,T,world,getView,setSky,setSeason,enterCinema}){
  function showPanel(open){panel.hidden=!open;toggle.setAttribute('aria-expanded',String(open));}
  function describe(text){if(status.textContent!==text)status.textContent=text;}
  async function post(path,data){
-  const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  const endpoint=path.startsWith('/api/rooms/')?'/api/rooms?roomPath='+encodeURIComponent(path.slice('/api/rooms/'.length)):path;
+  const response=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
   const result=await response.json().catch(()=>null);
   if(!response.ok||!result)throw new Error(result?.error||'Invitations need the room service. On this computer, run npm start in the Little-Stream folder and open http://127.0.0.1:8080. For friends online, this site needs its Node room server hosted publicly.');
   return result;
@@ -2338,9 +2339,9 @@ function mountRoom({root,T,world,getView,setSky,setSeason,enterCinema}){
   catch{inviteField.focus();inviteField.select();describe('Copy the selected invite link.');}
  };
  find('[data-room-source-form]').onsubmit=event=>{
-  event.preventDefault();sendControl('source',{url:sourceField.value.trim()});
+  event.preventDefault();const url=sourceField.value.trim();if(/(?:youtu\.be|youtube\.com)/i.test(url)){describe('YouTube links cannot play on the shared screen yet. Use a direct HTTPS MP4/WebM video URL.');return;}sendControl('source',{url});
  };
- find('[data-room-cinema]').onclick=()=>sendControl('cinema',{open:!state.cinema});
+ find('[data-room-cinema]').onclick=async()=>{const opening=!state.cinema;const result=await sendControl('cinema',{open:opening});if(result&&opening)enterCinema();};
  function enablePlayback(){
   enabled=true;movie.muted=false;
   const mediaAtClick=state?.media;
@@ -2781,7 +2782,7 @@ function releaseFilmSurface(){
 }
 function syncCinemaFilm(){
  const shared=Boolean(room?.active);
- $('[data-solo-movie]').hidden=shared;
+ $('[data-solo-movie]').hidden=shared;$('[data-shared-movie]').hidden=!shared;
  if(shared&&(!localFilm.paused||screenMaterial.map===filmTexture)){
   localFilm.pause();releaseFilmSurface();filmMessage('');
  }
@@ -2797,6 +2798,7 @@ async function playLocalFilm(){
  try{await localFilm.play();}
  catch(error){if(error.name!=='AbortError')filmMessage('Select Play to start, or try a browser-compatible MP4 or WebM.');}
 }
+$('[data-shared-movie]').onclick=()=>{const panel=$('[data-room-panel]');if(panel.hidden)$('[data-room-toggle]').click();$('[data-room-source]').focus();};
 $('[data-cinema-file]').onchange=e=>{
  const file=e.target.files[0];if(!file||room?.active)return;
  localFilm.pause();releaseFilmSurface();
