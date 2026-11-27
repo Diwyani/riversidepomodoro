@@ -16,7 +16,7 @@ const id=(bytes=16)=>randomBytes(bytes).toString('hex');
 const now=()=>Date.now();
 const liveFor=20_000;
 const roomLifetime=6*60*60_000;
-const maxRooms=300, maxGuests=12;
+const maxRooms=300, maxGuests=2;
 
 function json(res,status,value){
  res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});
@@ -135,7 +135,7 @@ const server=createServer(async(req,res)=>{
   const body=await readBody(req);
   if(action==='join'){
    const prior=room.guests.get(body.token);
-   if(!prior&&room.guests.size>=maxGuests)return json(res,409,{error:'The room is full.'});
+   if(!prior&&room.guests.size>=maxGuests)return json(res,409,{error:'This room is full (2 people: host and one guest).'});
    const guest=prior||addGuest(room,displayName(body.name));
    if(displayName(body.name))guest.name=displayName(body.name);
    guest.seen=now();room.touched=now();

@@ -1,0 +1,13 @@
+node_modules/
+.claude/
+.git/
+.env
+.env.*
+*.docx
+*.pdf
+*.png
+*.jpg
+*.jpeg
+references/
+rive/
+check*.mjs

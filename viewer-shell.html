@@ -37,7 +37,7 @@
  </button>
 </section>
 
- <p class="text-small walking-help">Space to walk / pause · WASD / arrows to move · drag to look · Esc to pause <span aria-hidden="true">·</span> <span data-season></span></p>
+ <p data-start-hint>Press Space to start walking</p><p class="text-small walking-help">Space to walk / pause · WASD / arrows to move · drag to look · Esc to pause <span aria-hidden="true">·</span> <span data-season></span></p>
  <details class="ls-panel" data-mixer><summary>Sound mixer</summary>
   <div class="mixer-levels">
    <label class="mixer-row">Water <input type="range" data-level="water" min="0" max="100" value="65"></label>
@@ -112,8 +112,8 @@
   <div class="viz-controls">
    <label class="btn cinema-file-label" data-solo-movie>Choose video<input type="file" accept="video/*,.mp4,.webm,.m4v,.mov" data-cinema-file aria-label="Choose video"></label>
    <button class="btn" type="button" data-cinema-play hidden>Play</button>
-   <button class="btn" type="button" data-cinema-seat="0" aria-pressed="false">Left couch</button>
-   <button class="btn" type="button" data-cinema-seat="1" aria-pressed="false">Right couch</button>
+   <button class="btn" type="button" data-cinema-seat="0" aria-pressed="false">Left chair</button>
+   <button class="btn" type="button" data-cinema-seat="1" aria-pressed="false">Right chair</button>
    <button class="btn" type="button" data-cinema-bed aria-pressed="false">Watch from bed</button>
   </div>
   <input type="range" data-cinema-seek aria-label="Movie position" min="0" max="1" step=".1" value="0" hidden>
@@ -338,6 +338,13 @@
 #firefly-walk [data-focus-ring-time] { font:500 30px/1 var(--ls-font); font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
 #firefly-walk [data-focus-ring-phase] { font:500 11px var(--ls-font); letter-spacing:.06em; text-transform:uppercase; color:var(--ls-muted); }
 @media (prefers-reduced-motion:reduce) { #firefly-walk .focus-ring-arc { transition:none; } }
+
+#firefly-walk [data-calendar-panel]{transition:opacity .22s ease;}
+#firefly-walk [data-calendar-panel].calendar-fading{opacity:0;pointer-events:none;}
+#firefly-walk [data-cinema-controls].ls-panel{left:50%;right:auto;transform:translateX(-50%);bottom:100px;justify-items:center;}
+#firefly-walk [data-cinema-controls].ls-panel .viz-controls{justify-content:center;flex-wrap:wrap;}
+#firefly-walk [data-start-hint]{position:absolute;top:46%;left:50%;transform:translate(-50%,-50%);margin:0;padding:10px 16px;border-radius:20px;background:#18221b28;color:#fff8e8bd;font:400 15px Georgia,serif;letter-spacing:.04em;text-align:center;pointer-events:none;}
+@media(prefers-reduced-motion:reduce){#firefly-walk [data-calendar-panel]{transition:none;}}
 </style>
 <script type="module">
 import * as T from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
@@ -357,7 +364,7 @@ const exploreDock=controlDock.querySelector('[aria-label="Explore"]');
 // Pond, chair and bed shortcut icons: Lucide (lucide.dev), ISC licence.
 function addSceneShortcut(action,label,paths){const button=document.createElement('button');button.type='button';button.className='btn icon-btn';button.dataset.action=action;button.title=label;button.setAttribute('aria-label',label);button.innerHTML='<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+paths+'</svg>';exploreDock.append(button);return button;}
 const pondShortcut=addSceneShortcut('pond','Go to pond','<path d="M6.5 12c.94-3.46 4.94-6 8.5-6 3.56 0 6.06 2.54 7 6-.94 3.47-3.44 6-7 6s-7.56-2.53-8.5-6Z"/><path d="M18 12v.5"/><path d="M16 17.93a9.77 9.77 0 0 1 0-11.86"/><path d="M7 10.67C7 8 5.58 5.97 2.73 5.5c-1 1.5-1 5 .23 6.5-1.24 1.5-1.24 5-.23 6.5C5.58 18.03 7 16 7 13.33"/><path d="M10.46 7.26C10.2 5.88 9.17 4.24 8 3h5.8a2 2 0 0 1 1.98 1.67l.23 1.4"/><path d="m16.01 17.93-.23 1.4A2 2 0 0 1 13.8 21H9.5a5.96 5.96 0 0 0 1.49-3.98"/>');
-const chairShortcut=addSceneShortcut('chair','Sit in garden chair','<path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z"/><path d="M5 18v2"/><path d="M19 18v2"/>');chairShortcut.setAttribute('aria-pressed','false');
+const chairShortcut=addSceneShortcut('chair','Sit in bookshelf chair','<path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z"/><path d="M5 18v2"/><path d="M19 18v2"/>');chairShortcut.setAttribute('aria-pressed','false');
 const bedCinemaShortcut=addSceneShortcut('bed-cinema','Watch movie from bed','<path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/>');bedCinemaShortcut.setAttribute('aria-pressed','false');
 $('[data-watch]').after(bedCinemaShortcut);
 const world=createWorld(T,textures),camera=new T.PerspectiveCamera(62,1,.04,220);camera.rotation.order='YXZ';camera.position.set(pathAt(3),heightAt(pathAt(3),3)+1.65,3);
@@ -380,7 +387,8 @@ function selectTime(name,instant=false){
  updateSound();
 }
 function labelIcon(control,label,pressed){control.title=label;control.setAttribute("aria-label",label);control.setAttribute("aria-pressed",String(pressed));}
-function stop(){walking=false;keys.clear();drag=null;labelIcon($('[data-action="walk"]'),"Resume walking", false);}
+function stop(){
+ const startHint=$('[data-start-hint]');if(startHint)startHint.hidden=true;walking=false;keys.clear();drag=null;labelIcon($('[data-action="walk"]'),"Resume walking", false);}
 $('[data-sky]').onclick=()=>{
  const next=skies[(skies.indexOf(sky)+1)%skies.length];
  if(!room?.changeSky(next)){selectTime(next);persist();}
@@ -640,7 +648,7 @@ function syncCinemaFilm(){
 }
 async function playLocalFilm(){
  if(!cinemaView||room?.active||!localFilmURL)return;
- if(seatIndex<0&&cinemaMode!=='bed')sitAtCinema(0);
+ if(seatIndex<0&&cinemaMode!=='bed')sitAtCinema(1);
  if(world.mode!=='night'&&world.mode!=='fullMoon')selectTime('night');
  filmMessage('');
  try{await localFilm.play();}
@@ -676,7 +684,7 @@ function goToScreen(mode='ground'){
   // Switch between the chair-level screen and the bed view without closing the cinema.
   stop();seatIndex=-1;root.querySelectorAll('[data-cinema-seat]').forEach(button=>button.setAttribute('aria-pressed','false'));
   setCinemaMode(mode);
-  if(mode==='bed')camera.position.copy(world.bedCinemaView);else camera.position.set(2.35,heightAt(2.35,-44.35)+1.59,-44.35);
+  if(mode==='bed')camera.position.copy(world.bedCinemaView);else sitAtCinema(1);
   aimCinema();return;
  }
  if(atDesk)$('[data-action="desk"]').click();
@@ -692,7 +700,7 @@ function goToScreen(mode='ground'){
  }
  setCinemaMode(mode);
  if(mode==='bed')camera.position.copy(world.bedCinemaView);
- else camera.position.set(2.35,heightAt(2.35,-44.35)+1.59,-44.35);
+ else sitAtCinema(1);
  aimCinema();
  $('[data-book-pick]').hidden=true;
 }
@@ -732,10 +740,11 @@ $('[data-action="listening"]').onclick=()=>{leaveGardenChair(false);
  stop();camera.position.copy(world.nookView);yaw=.78;pitch=-.14;persist();
 };
 let gardenSitting=false;const gardenReturn=new T.Vector3();
-function leaveGardenChair(restore=true){if(!gardenSitting)return;gardenSitting=false;if(restore)camera.position.copy(gardenReturn);labelIcon(chairShortcut,'Sit in garden chair',false);}
+function leaveGardenChair(restore=true){if(!gardenSitting)return;gardenSitting=false;if(restore)camera.position.copy(gardenReturn);labelIcon(chairShortcut,'Sit in bookshelf chair',false);}
 pondShortcut.onclick=()=>{leaveCinema();if(atDesk)$('[data-action="desk"]').click();leaveGardenChair(false);stop();camera.position.copy(world.pondView);yaw=0;pitch=-.12;persist();};
-chairShortcut.onclick=()=>{if(gardenSitting){leaveGardenChair();persist();return;}leaveCinema();if(atDesk)$('[data-action="desk"]').click();stop();gardenReturn.copy(camera.position);camera.position.copy(world.cinemaSeats[0]);yaw=Math.PI+(world.scene.getObjectByName('clay camp chair')?.rotation.y||0);pitch=-.04;gardenSitting=true;labelIcon(chairShortcut,'Stand up from garden chair',true);persist();};
+chairShortcut.onclick=()=>{if(gardenSitting){leaveGardenChair();persist();return;}leaveCinema();if(atDesk)$('[data-action="desk"]').click();stop();gardenReturn.copy(camera.position);camera.position.copy(world.readingSeat);yaw=world.readingYaw;pitch=-.04;gardenSitting=true;labelIcon(chairShortcut,'Stand up from bookshelf chair',true);persist();};
 function startWalking(){
+ $('[data-start-hint]').hidden=true;
  leaveGardenChair();
  if(atDesk)$('[data-action="desk"]').click();
  if(detail)$('[data-action="back"]').click();
@@ -876,11 +885,15 @@ function setCalendarSeason(name,month=calendarMonth,weather=weatherChoice){
 const monthButton=document.createElement('button');monthButton.type='button';monthButton.className='btn';monthButton.setAttribute('aria-expanded','false');monthPicker.hidden=true;monthPicker.after(monthButton);
 const monthMenu=document.createElement('div');monthMenu.className='month-menu';monthMenu.hidden=true;monthButton.after(monthMenu);
 function monthLabel(){monthButton.textContent=monthPicker.selectedOptions[0].textContent;monthMenu.querySelectorAll('button').forEach(b=>b.setAttribute('aria-current',String(b.dataset.month===monthPicker.value)));}
-for(const option of monthPicker.options){const button=document.createElement('button');button.type='button';button.dataset.month=option.value;button.textContent=option.textContent;button.onclick=()=>{monthPicker.value=option.value;changeCalendar();monthLabel();monthMenu.hidden=true;monthButton.setAttribute('aria-expanded','false');};monthMenu.append(button);}
+for(const option of monthPicker.options){const button=document.createElement('button');button.type='button';button.dataset.month=option.value;button.textContent=option.textContent;button.onclick=()=>{monthPicker.value=option.value;changeCalendar();monthLabel();monthMenu.hidden=true;monthButton.setAttribute('aria-expanded','false');armCalendarHide();};monthMenu.append(button);}
 monthLabel();
 monthButton.onclick=()=>{monthMenu.hidden=!monthMenu.hidden;monthButton.setAttribute('aria-expanded',String(!monthMenu.hidden));};
+let calendarIdle;
+function closeCalendar(){calendarPanel.hidden=true;calendarPanel.classList.remove('calendar-fading');calendarToggle.setAttribute('aria-expanded','false');monthMenu.hidden=true;monthButton.setAttribute('aria-expanded','false');}
+function armCalendarHide(){clearTimeout(calendarIdle);calendarPanel.classList.remove('calendar-fading');if(calendarPanel.hidden)return;calendarIdle=setTimeout(()=>{if(!monthMenu.hidden){armCalendarHide();return;}if(reduced.matches){closeCalendar();return;}calendarPanel.classList.add('calendar-fading');calendarIdle=setTimeout(closeCalendar,220);},5000);}
+for(const event of ['pointermove','pointerdown','keydown','focusin','input'])calendarPanel.addEventListener(event,armCalendarHide);
 calendarToggle.onclick=()=>{
- calendarPanel.hidden=!calendarPanel.hidden;calendarToggle.setAttribute('aria-expanded',String(!calendarPanel.hidden));
+ calendarPanel.hidden=!calendarPanel.hidden;calendarToggle.setAttribute('aria-expanded',String(!calendarPanel.hidden));armCalendarHide();
  if(!calendarPanel.hidden){
   $('[data-room-panel]').hidden=true;$('[data-room-toggle]').setAttribute('aria-expanded','false');
  }

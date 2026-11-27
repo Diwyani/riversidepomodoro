@@ -24,7 +24,7 @@ export function mountRoom({root,T,world,getView,setSky,setSeason,enterCinema}){
  async function post(path,data){
   const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
   const result=await response.json().catch(()=>null);
-  if(!response.ok||!result)throw new Error(result?.error||'Run the Little Stream room server to use invitations.');
+  if(!response.ok||!result)throw new Error(result?.error||'Invitations need the room service. On this computer, run npm start in the Little-Stream folder and open http://127.0.0.1:8080. For friends online, this site needs its Node room server hosted publicly.');
   return result;
  }
  function send(kind,data={}){
@@ -33,7 +33,7 @@ export function mountRoom({root,T,world,getView,setSky,setSeason,enterCinema}){
   return post('/api/rooms/'+room+'/update',{token,kind,...data});
  }
  function sendControl(kind,data){
-  return send(kind,data).catch(error=>describe(error.message));
+  return send(kind,data).then(result=>{if(membership&&result?.state)apply(result.state);return result;}).catch(error=>describe(error.message));
  }
  function timeAt(media){
   return media.position+(media.playing?Math.max(0,Date.now()+clockOffset-media.updatedAt)/1000:0);
@@ -117,11 +117,13 @@ export function mountRoom({root,T,world,getView,setSky,setSeason,enterCinema}){
   find('[data-room-entrance]').hidden=true;find('[data-room-live]').hidden=false;
   find('[data-room-host]').hidden=!membership.host;
   updateInvite();apply(initial);
-  events=new EventSource('/api/rooms/'+membership.room+'/events?token='+encodeURIComponent(membership.token));
+  if(session.transport==='poll'){events={close(){}};describe('Connected · 2-person room');}
+  else {events=new EventSource('/api/rooms/'+membership.room+'/events?token='+encodeURIComponent(membership.token));
   events.onopen=()=>describe('Connected');
   events.onmessage=event=>apply(JSON.parse(event.data));
   events.onerror=()=>describe('Connection interrupted. Trying to reconnect…');
-  describe('Connecting…');
+  describe('Connecting…');}
+
   reportPosition();
  }
  async function joinRoom(token){
@@ -139,10 +141,11 @@ export function mountRoom({root,T,world,getView,setSky,setSeason,enterCinema}){
  function reportPosition(){
   if(!membership)return;
   const view=getView();
-  send('presence',{position:view.position.map(n=>Math.round(n*100)/100),yaw:view.yaw,area:view.area}).catch(error=>{
+  if(reportPosition.busy)return;reportPosition.busy=true;
+  send('presence',{position:view.position.map(n=>Math.round(n*100)/100),yaw:view.yaw,area:view.area}).then(result=>{if(membership&&result?.state)apply(result.state);}).catch(error=>{
    describe(error.message);
    if(/expired|join the room/i.test(error.message))clearRoom(false);
-  });
+  }).finally(()=>{reportPosition.busy=false;});
  }
  function clearRoom(notify=true){
   if(!membership)return;

@@ -442,15 +442,13 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  const curtainPanels=[];
  const laceMaterial=new T.MeshBasicMaterial({color:0xd2c6ad,transparent:true,opacity:1,side:T.DoubleSide});
  const laceTrim=laceMaterial.clone();laceTrim.depthWrite=false;
+ let curtainStripe=null,curtainSprig=null;
  if(typeof document!=='undefined'){
-  const tile=document.createElement('canvas');tile.width=512;tile.height=32;
-  const ctx=tile.getContext('2d');ctx.strokeStyle='#fff';ctx.lineWidth=2.8;
-  ctx.beginPath();ctx.moveTo(0,5);ctx.lineTo(512,5);
-  for(let x=0;x<512;x+=16){
-   ctx.moveTo(x,5);ctx.quadraticCurveTo(x+8,31,x+16,5);
-   ctx.moveTo(x+3,7);ctx.quadraticCurveTo(x+8,19,x+13,7);
-  }
-  ctx.stroke();laceTrim.map=new T.CanvasTexture(tile);
+  function clothPattern(sprig){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.fillStyle=sprig?'#e6c66f':'#e8dbb5';g.fillRect(0,0,256,256);
+   g.strokeStyle=sprig?'#b89645':'#cbb780';g.lineWidth=1;for(let x=0;x<256;x+=32){g.beginPath();g.moveTo(x,0);g.lineTo(x,256);g.stroke();}
+   if(sprig){g.strokeStyle='#ad985b';g.fillStyle='#b6a16b';for(let x=24;x<256;x+=64)for(let y=30;y<256;y+=80){g.beginPath();g.moveTo(x,y+17);g.lineTo(x+4,y-12);g.stroke();for(const side of [-1,1]){g.beginPath();g.ellipse(x+side*5,y+side*5,3,7,side*.65,0,Math.PI*2);g.fill();}}}
+   const tx=new T.CanvasTexture(c);tx.colorSpace=T.SRGBColorSpace;return tx;}
+  curtainStripe=clothPattern(false);curtainSprig=clothPattern(true);curtainMaterial.map=curtainStripe;
  }
  let curtainsClosed=false,curtainProgress=0;
  function toggleCurtains(){curtainsClosed=!curtainsClosed;return curtainsClosed;}
@@ -471,10 +469,10 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
     const pos=pleats.attributes.position;
     for(let i=0;i<pos.count;i++){const u=pos.getX(i);pos.setZ(i,Math.sin(u/width*73)*.029);pos.setY(i,pos.getY(i)-.015*Math.cos(u/width*55));}
     pleats.computeVertexNormals();
-    const panel=new T.Mesh(pleats,curtainMaterial);panel.name='curtain';if(parent.name==='attic-bedroom'||y>3){panel.material=curtainMaterial.clone();panel.material.color.set(0xe5c668);panel.material.transparent=true;panel.material.opacity=.48;panel.material.depthWrite=false;}panel.position.z=-.09;bay.add(panel);
-       const lace=new T.Mesh(new T.PlaneGeometry(width*.49,.088),laceTrim);
+    const panel=new T.Mesh(pleats,curtainMaterial);panel.name='curtain';if(parent.name==='attic-bedroom'||y>3){panel.material=curtainMaterial.clone();panel.material.color.set(0xffffff);panel.material.map=curtainSprig;panel.material.transparent=true;panel.material.opacity=.48;panel.material.depthWrite=false;}panel.position.z=-.09;bay.add(panel);
+       const hemMaterial=new T.MeshStandardMaterial({color:y>3?0xb39a52:0xc0ad7a,roughness:1,side:T.DoubleSide,transparent:y>3,opacity:y>3?.55:1});const lace=new T.Mesh(new T.PlaneGeometry(width*.49,.025),hemMaterial);
     lace.position.set(0,-height*.43,.015);panel.add(lace);
-    const tie=box(panel,width*.43,.055,.044,0,-.09,.035,laceMaterial);
+    const tie=box(panel,width*.43,.055,.044,0,-.09,.035,hemMaterial);
     tie.castShadow=false;
     curtainPanels.push({mesh:panel,side,width,restX:pos.array.slice(),tie});
    }
@@ -500,15 +498,15 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  // A window in the east wall lights the bed and the lamp beside it.
  box(hut,.11,2.14,-2.34-backWall,eastWall,3.58,(backWall-2.34)/2,timber);
  box(hut,.11,2.14,frontWall+1.18,eastWall,3.58,(frontWall-1.18)/2,timber);
- box(hut,.11,.68,1.16,eastWall,2.85,-1.76,timber);
- box(hut,.11,.54,1.16,eastWall,4.38,-1.76,timber);
- windowBay(hut,1.16,.91,eastWall,3.645,-1.76,Math.PI/2);
+ box(hut,.11,.88,1.16,eastWall,2.95,-1.76,timber);
+ box(hut,.11,.34,1.16,eastWall,4.48,-1.76,timber);
+ windowBay(hut,1.16,.91,eastWall,3.845,-1.76,Math.PI/2);
  for(const z of [backWall,frontWall]){
   if(z===backWall)box(hut,eastWall-westWall,2.14,.11,roofCenter,3.58,z,timber);
   else {
    box(hut,(eastWall-westWall-.94)/2,2.14,.11,roofCenter-((eastWall-westWall+.94)/4),3.58,z,timber);
    // East half: a picture window that frames the outdoor screen from the attic bed.
-   const winL=.45,winR=2.65,winB=2.75,winT=4.35,panelL=roofCenter+.47;
+   const winL=.45,winR=2.65,winB=2.95,winT=4.50,panelL=roofCenter+.47;
    box(hut,winL-panelL,2.14,.11,(panelL+winL)/2,3.58,z,timber);
    box(hut,eastWall-winR,2.14,.11,(winR+eastWall)/2,3.58,z,timber);
    box(hut,winR-winL,winB-2.51,.11,(winL+winR)/2,(2.51+winB)/2,z,timber);
@@ -633,6 +631,11 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
   tassel.rotation.x=.05;
  }
 
+ const nightstand=new T.Group();nightstand.name='bedside table touching bed';nightstand.position.set(bedX-.98,loftHeight,bedZ-.55);attic.add(nightstand);
+ box(nightstand,.74,.065,.65,0,.49,0,timber);box(nightstand,.65,.15,.54,0,.375,0,timber);box(nightstand,.11,.025,.035,0,.38,.29,brassMatPlaceholder());
+ function brassMatPlaceholder(){return new T.MeshStandardMaterial({color:0xae945f,metalness:.6,roughness:.45});}
+ for(const x of [-.29,.29])for(const z of [-.24,.24])box(nightstand,.045,.30,.045,x,.15,z,timber);
+ for(const [x,r,h,color] of [[-.16,.055,.065,0xe6d9c9],[.04,.045,.10,0xb5c4ae]]){const jar=new T.Mesh(new T.CylinderGeometry(r,r,h,20),new T.MeshStandardMaterial({color,roughness:.35}));jar.name='night cream jar';jar.position.set(x,.525+h/2,0);nightstand.add(jar);const lid=new T.Mesh(new T.CylinderGeometry(r*1.04,r*1.04,.018,20),brassMatPlaceholder());lid.position.set(x,.534+h,0);nightstand.add(lid);}
  const bedroomLamp=new T.Group();bedroomLamp.name='poppy paper bedside lamp';bedroomLamp.position.set(-.85,loftHeight+.5675,-2.63);attic.add(bedroomLamp);
  let poppyTexture=null;
  if(typeof document!=='undefined'){
@@ -1139,7 +1142,7 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
   for(const [i,y] of [[1,.83],[2,.83],[3,2.46],[4,2.46]])beam.setY(i,y+cinemaLift);
   beam.needsUpdate=true;projectorBeamGeometry.computeBoundingSphere();
  }
- function setCinemaOpen(open){cinemaOpen=open;hearth.visible=!open;if(open)fireLight.intensity=0;}
+ function setCinemaOpen(open){cinemaOpen=open;hearth.visible=!open&&month!==8&&month!==9;if(open)fireLight.intensity=0;}
  cinema.visible=false;projector.visible=false;
  // A small outdoor hearth gives the laptop nook warm light after dark.
  const hearth=new T.Group();hearth.name='bonfire between camp chairs';hearth.position.set(screenX,heightAt(screenX,-38.05)+.08,-38.05);root.add(hearth);colliders.push({x:screenX,z:-38.05,r:.62});
@@ -1188,8 +1191,8 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
   veilTexture=new T.CanvasTexture(cloud);
  }
  for(let i=0;i<8;i++){
-  const veil=new T.Sprite(new T.SpriteMaterial({map:veilTexture,color:0xc7c6d6,transparent:true,opacity:.49,depthWrite:false}));
-  veil.position.set(fallX+(i-3.5)*1.22,fallHeight+Math.sin(i*1.4)*.65+.4,fallZ+1+i%2*.7);
+  const veil=new T.Sprite(new T.SpriteMaterial({map:veilTexture,color:0xf5f4ed,transparent:true,opacity:.38,depthWrite:false}));
+  veil.position.set(fallX+(i-3.5)*1.22,fallHeight+Math.sin(i*1.4)*.45+1.1,fallZ+1+i%2*.7);
   veil.scale.set(5.8+i%3,2.5+i%2*.7,1);waterfall.add(veil);fallMist.push({material:veil.material,color:veil.material.color.clone(),opacity:veil.material.opacity});
  }
 
@@ -1246,7 +1249,7 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  }
  // Low distant hills retain a layered painted silhouette rather than a flat backdrop.
  const hillMat=new T.MeshLambertMaterial({map:textures.leaf,color:0xb6b4c3});for(let i=0;i<10;i++){const m=new T.Mesh(clusterG,hillMat);m.scale.set(14+rng()*12,5+rng()*5,9+rng()*10);m.position.set(-65+i*15,1,-78-rng()*15);root.add(m);}
- for(let i=0;i<0;i++){const bug=createFirefly(T),z=i<4?17-i*.7:20-rng()*72,x=i<4?[-.8,1.2,-1.6,.6][i]:pathAt(z)+(rng()<.5?-1:1)*(1.2+rng()*6),y=heightAt(x,z)+.7+rng()*1.4;bug.group.position.set(x,y,z);bug.group.scale.setScalar(i<4?1.05:.65+rng()*.5);scene.add(bug.group);flies.push({...bug,origin:new T.Vector3(x,y,z),phase:rng()*6,speed:.25+rng()*.25});}
+ for(let i=0;i<30;i++){const bug=createFirefly(T),z=i<4?17-i*.7:20-rng()*72,x=i<4?[-.8,1.2,-1.6,.6][i]:pathAt(z)+(rng()<.5?-1:1)*(1.2+rng()*6),y=heightAt(x,z)+.7+rng()*1.4;bug.group.position.set(x,y,z);bug.group.scale.setScalar(i<4?1.05:.65+rng()*.5);scene.add(bug.group);flies.push({...bug,origin:new T.Vector3(x,y,z),phase:rng()*6,speed:.25+rng()*.25});}
  // One rooted climber follows the front-left post to the left roof edge.
  const climbers=new T.Group();climbers.name='seasonal cafe climbers';hut.add(climbers);
  const vineMat=new T.MeshLambertMaterial({color:0x696b4d}),vineLeafMat=new T.MeshLambertMaterial({color:0x79916b,side:T.DoubleSide});
@@ -1343,13 +1346,15 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
   });
  }
  populateCreamPatches(meadowFlowers,meadowSites,groundFlowerHeads);
+ const climberCalendar=[{b:0,l:0},{b:0,l:.04},{b:.18,l:.5},{b:1,l:.8},{b:.72,l:.9},{b:.38,l:1},{b:.3,l:1},{b:.2,l:1},{b:.12,l:.9},{b:.08,l:.65},{b:0,l:.25},{b:0,l:0}];
+ let climberBloom=1,climberLeaf=.8;
+ vineCreamMaterial.transparent=true;vineCreamMaterial.depthWrite=false;vineLeafMat.transparent=true;
  function updateClimbers(){
-  const lush=season==='monsoon'||rainTarget>0;
   flowerRoof.visible=false;meadowFlowers.visible=!snowing;
-  for(const [i,heads] of [...roofFlowerHeads,...groundFlowerHeads].entries()){heads.visible=!snowing;heads.scale.setScalar(.15+monthlyLife[month-1].bloom*.85);}
-  climbers.visible=!snowing;vineLeaves.count=lush?520:season==='autumn'?210:330;
-  vineLeafMat.color.set(lush?0x8fa77c:0xa8b694);vineBlossoms.visible=!snowing;vineBlossoms.scale.setScalar(monthlyLife[month-1].bloom);vineBuds.visible=month===3&&!snowing;
+  for(const heads of groundFlowerHeads){heads.visible=!snowing;heads.scale.setScalar(.15+monthlyLife[month-1].bloom*.85);}
+  climbers.visible=true;vineBlossoms.visible=true;vineBlossoms.scale.setScalar(1);vineBuds.visible=month===3;
  }
+ function advanceClimbers(dt,quiet){const target=climberCalendar[month-1],blend=quiet?1:1-Math.exp(-dt*.75);climberBloom+=(target.b-climberBloom)*blend;climberLeaf+=(target.l-climberLeaf)*blend;vineCreamMaterial.opacity=climberBloom;vineLeafMat.opacity=Math.min(1,climberLeaf*1.4);vineLeaves.count=Math.round(climberLeaf*520);}
  root.traverse(o=>{if(o.isMesh){o.castShadow=o!==ground&&o!==water&&o!==grass;o.receiveShadow=true;}});
  key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.camera.left=-14;key.shadow.camera.right=14;key.shadow.camera.top=26;key.shadow.camera.bottom=-14;key.shadow.camera.near=.5;key.shadow.camera.far=85;key.shadow.normalBias=.035;key.position.set(-8,26,-40);key.target.position.set(5,8,-56);scene.add(key.target);
  const settledSnow=new T.Group();settledSnow.name='settled winter snow';settledSnow.visible=false;root.add(settledSnow);
@@ -1677,7 +1682,7 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  function advance(t,dt,quiet=false){
  updateCupArt();
  for(const pull of lampSwitches){const d=pull.userData;if(d.tug>0){d.tug=Math.max(0,d.tug-dt*3.2);pull.scale.y=1+.16*Math.sin(d.tug*Math.PI);}}
- blendMonth(dt,quiet);advanceFreeze(dt,quiet);
+ blendMonth(dt,quiet);advanceFreeze(dt,quiet);advanceClimbers(dt,quiet);
  if(coffeeSteam.visible)coffeeSteam.children.forEach((s,i)=>{const phase=quiet?.5:(t*.27+i/3)%1;s.position.y=quiet?0:phase*.08;s.material.opacity=quiet?.30:.18+Math.sin(phase*Math.PI)*.38;});updateFlowerClock();apply(1-Math.exp(-dt*5));animateFalling(t);
  for(const m of mistPuffs){m.puff.position.set(m.base.x+Math.sin(t*.13+m.phase)*.8,m.base.y+Math.sin(t*.09+m.phase*2)*.4,m.base.z);}
  for(const m of fallMist){m.material.color.copy(m.color).lerp(nightMistColor,current.night);m.material.opacity=m.opacity*(1-.65*current.night);}
@@ -1717,7 +1722,7 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
   cloth.needsUpdate=true;clothGeometry.computeVertexNormals();
  }
  windStrength.value=seasonStyle.wind*(1+current.night*.48);
- wind.value=t*(1+current.night*.15);record.rotation.y=t*.35;cafeLight.intensity=.85+current.night*.95;hearth.visible=!cinemaOpen;flames.visible=!cinemaOpen&&current.night>.08;fireLight.intensity=(cinemaOpen?0:current.night)*(1-rainStrength.value*.25)*(5.5+.5*Math.sin(t*5.3)+.3*Math.sin(t*8.1));for(const {mesh,height,phase} of flameTongues){
+ wind.value=t*(1+current.night*.15);record.rotation.y=t*.35;cafeLight.intensity=.85+current.night*.95;hearth.visible=!cinemaOpen&&month!==8&&month!==9;flames.visible=hearth.visible&&current.night>.08;fireLight.intensity=(!hearth.visible?0:current.night)*(1-rainStrength.value*.25)*(5.5+.5*Math.sin(t*5.3)+.3*Math.sin(t*8.1));for(const {mesh,height,phase} of flameTongues){
   mesh.scale.y=height*(1+.19*Math.sin(t*5+phase)+.07*Math.sin(t*9+phase));
   mesh.rotation.z=.15*Math.sin(t*3+phase);
  }
@@ -1741,7 +1746,7 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
   const flap=quiet?.34:Math.sin(t*15+phase)*.95;
   wings[0].rotation.z=-flap;wings[1].rotation.z=flap;
  }
-for(let i=0;i<flies.length;i++){const b=flies[i],p=b.phase,s=t*b.speed;b.group.visible=target.night>0;b.group.position.set(b.origin.x+Math.sin(s+p)*.65,b.origin.y+Math.sin(s*.8+p)*.28,b.origin.z+Math.cos(s*.65+p)*.55);b.group.rotation.y=Math.sin(s+p)*.8+p;b.group.rotation.z=Math.sin(s*.5+p)*.12;b.animate(t,p,quiet);if(i<nearLights.length){nearLights[i].position.copy(b.group.position);nearLights[i].intensity=(target.night>0?.035+.14*current.night:0)*( .6+.4*Math.sin(t*1.7+p)**2);}}sky.position.set(0,0,0);}
+for(let i=0;i<flies.length;i++){const b=flies[i],p=b.phase,s=t*b.speed;b.group.visible=target.night>0&&month>=4&&month<=10&&!snowing;b.group.position.set(b.origin.x+Math.sin(s+p)*.65,b.origin.y+Math.sin(s*.8+p)*.28,b.origin.z+Math.cos(s*.65+p)*.55);b.group.rotation.y=Math.sin(s+p)*.8+p;b.group.rotation.z=Math.sin(s*.5+p)*.12;b.animate(t,p,quiet);if(i<nearLights.length){nearLights[i].position.copy(b.group.position);nearLights[i].intensity=(target.night>0&&month>=4&&month<=10&&!snowing?.035+.14*current.night:0)*( .6+.4*Math.sin(t*1.7+p)**2);}}sky.position.set(0,0,0);}
  function move(position,dx,dz){let x=Math.max(-23,Math.min(23,position.x+dx)),z=Math.max(-53,Math.min(24,position.z+dz));if(pondDistance(x,z)<pondRadius){const side=x<pondX?-1:1;x=pondX+side*Math.sqrt(pondRadius**2-(z-pondZ)**2);}
  const river=7+1.6*Math.sin(z*.12);if(z<=streamEndZ&&Math.abs(x-river)<2.25)x=river+(x<river?-2.25:2.25);for(const c of colliders){const ox=x-c.x,oz=z-c.z,d=Math.hypot(ox,oz);if(d<c.r){const k=c.r/(d||1);x=c.x+(d?ox*k:c.r);z=c.z+(d?oz*k:0);}}const inside=(px,pz)=>px-hut.position.x>westWall&&px-hut.position.x<eastWall&&pz-hut.position.z>backWall&&pz-hut.position.z<frontWall;
  const priorFloor=position.y-hut.position.y-1.65;
@@ -1778,5 +1783,5 @@ for(let i=0;i<flies.length;i++){const b=flies[i],p=b.phase,s=t*b.speed;b.group.v
   floor=hut.position.y+(upper?loftHeight:climb);
  }
  return new T.Vector3(x,floor+1.65,z);}
- return{pondView:new T.Vector3(pondX,heightAt(pondX,pondZ+pondRadius+1.1)+1.65,pondZ+pondRadius+1.1),get frozen(){return month===12||month===1;},get freezeAmount(){return freezeAmount;},get seasonalLife(){return seasonalLife;},studyAlarm,setStudyTimer,studyCup,coffeeSteam,setStudyActive,studyChairs,deskLamp,listeningNook,redSofa,floorLamp,flowerClock,vinyls,vinylCollection,nookView:new T.Vector3(hut.position.x+.70,hut.position.y+1.82,hut.position.z+1.75),cafeBounds:CAFE_LAYOUT,groundObstacles,kitchen,cafeBookcase,scene,root,flies,butterflies,sky,skyMaterial,hemi,key,fill,ground,path,grass,canopy,fringe,water,waterfall,fallStrips,hut,cafe,attic,shelfTarget,upstairsPosition,stairFoot,cafeDoor,toggleDoor,toggleCurtains,cinema,cinemaSeats,projector,setCinemaOpen,movieScreen,projectorBeam,deskView:new T.Vector3(hut.position.x+.08,hut.position.y+1.48,hut.position.z-1.10),setCinemaLift,BED_SCREEN_LIFT,bedCinemaView:new T.Vector3(hut.position.x+bedX,hut.position.y+loftHeight+1.2,hut.position.z+bedZ+.55),get cinemaScreenCentre(){return new T.Vector3(cinema.position.x,cinema.position.y+1.63+cinemaLiftTarget,cinema.position.z);},books,musicPlayer,lampSwitches,lampTargets,toggleLamp,record,flames,fireLight,pool,sourceWater,fallHeight,droplets,currents,ripples,colliders,setTime,setSeason,setMonth,setWeather,get month(){return month;},get snowing(){return snowing;},advance,move,get wetness(){return wetness.value;},get rainIntensity(){return rainStrength.value;},get raining(){return raining;},get weather(){return weather;},get season(){return season;},get mode(){return mode;},get night(){return current.night;}};
+ return{readingSeat:redSofa.localToWorld(new T.Vector3(0,1.25,.22)),readingYaw:redSofa.rotation.y+Math.PI,pondView:new T.Vector3(pondX,heightAt(pondX,pondZ+pondRadius+1.1)+1.65,pondZ+pondRadius+1.1),get frozen(){return month===12||month===1;},get freezeAmount(){return freezeAmount;},get seasonalLife(){return seasonalLife;},studyAlarm,setStudyTimer,studyCup,coffeeSteam,setStudyActive,studyChairs,deskLamp,listeningNook,redSofa,floorLamp,flowerClock,vinyls,vinylCollection,nookView:new T.Vector3(hut.position.x+.70,hut.position.y+1.82,hut.position.z+1.75),cafeBounds:CAFE_LAYOUT,groundObstacles,kitchen,cafeBookcase,scene,root,flies,butterflies,sky,skyMaterial,hemi,key,fill,ground,path,grass,canopy,fringe,water,waterfall,fallStrips,hut,cafe,attic,shelfTarget,upstairsPosition,stairFoot,cafeDoor,toggleDoor,toggleCurtains,cinema,cinemaSeats,projector,setCinemaOpen,movieScreen,projectorBeam,deskView:new T.Vector3(hut.position.x+.08,hut.position.y+1.48,hut.position.z-1.10),setCinemaLift,BED_SCREEN_LIFT,bedCinemaView:new T.Vector3(hut.position.x+bedX,hut.position.y+loftHeight+1.2,hut.position.z+bedZ+.55),get cinemaScreenCentre(){return new T.Vector3(cinema.position.x,cinema.position.y+1.63+cinemaLiftTarget,cinema.position.z);},books,musicPlayer,lampSwitches,lampTargets,toggleLamp,record,flames,fireLight,pool,sourceWater,fallHeight,droplets,currents,ripples,colliders,setTime,setSeason,setMonth,setWeather,get month(){return month;},get snowing(){return snowing;},advance,move,get wetness(){return wetness.value;},get rainIntensity(){return rainStrength.value;},get raining(){return raining;},get weather(){return weather;},get season(){return season;},get mode(){return mode;},get night(){return current.night;}};
 }

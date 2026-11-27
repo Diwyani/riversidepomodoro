@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "node vercel-build.mjs",
+  "outputDirectory": "public",
+  "functions": { "api/rooms.js": { "maxDuration": 15 } },
+  "rewrites": [ { "source": "/api/rooms/:roomPath+", "destination": "/api/rooms?roomPath=:roomPath+" } ]
+}

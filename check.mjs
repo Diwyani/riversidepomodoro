@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {createWorld,createFirefly,PALETTES,pathAt,heightAt,areaAt} from './world.mjs';
 const T=await import(process.env.THREE_MODULE||'three');
 const textures=Object.fromEntries(['leaf','bark','ground','path','fringe'].map(k=>[k,new T.Texture()]));const world=createWorld(T,textures),bug=createFirefly(T);
-assert.equal(world.flies.length,42);assert.equal(bug.wings.length,2);
+assert.equal(world.flies.length,30);assert.equal(bug.wings.length,2);
 for(const t of [0,1,60,10000]){world.advance(t,.016);world.scene.updateMatrixWorld(true);world.scene.traverse(o=>{assert(o.matrixWorld.elements.every(Number.isFinite));if(o.isMesh)assert([...o.geometry.attributes.position.array].every(Number.isFinite));});}
 for(const mode of ['evening','night','dawn']){world.setTime(mode,true);assert.equal(world.mode,mode);assert.equal(world.hemi.intensity,PALETTES[mode].ambient);}
 assert(PALETTES.night.ambient<PALETTES.evening.ambient*.1);
@@ -10,7 +10,7 @@ for(let z=20;z>=-52;z-=.2){const p=world.move(new T.Vector3(pathAt(z),0,z),0,0);
 for(const c of world.colliders){const p=world.move(new T.Vector3(c.x,0,c.z),0,0);assert(Math.hypot(p.x-c.x,p.z-c.z)>=c.r-.00001);}
 assert(world.move(new T.Vector3(100,0,100),0,0).z<=24);
 assert(world.move(new T.Vector3(7,0,-40),0,0).y>1);
-console.log('PASS: finite meshes and animation, 42 beetles, three palettes, traversable path, tree collision, boundaries and stream banks.');
+console.log('PASS: finite meshes and animation, 30 seasonal fireflies, three palettes, traversable path, tree collision, boundaries and stream banks.');
 
 assert.equal(areaAt(20),'Meadow');assert.equal(areaAt(-15),'Woodland');assert.equal(areaAt(-35),'Streamside');assert.equal(areaAt(-50),'Waterfall');assert.equal(world.fallStrips.length,13);assert(world.grass.geometry.attributes.position.count>100000);for(let z=-28;z>=-52;z-=1)assert(Math.abs((7+1.6*Math.sin(z*.12))-pathAt(z))<6);console.log('PASS: curved grass, streamside route and waterfall arrival.');
 assert(world.pool.geometry.parameters.radius>4.5);
@@ -22,7 +22,7 @@ world.advance(1,.016);assert(marker.mesh.position.z>previousZ,'Current flows tow
 assert(world.attic.getObjectByName('white bedsheet'));
 assert(world.attic.getObjectByName('rose wool kambal'));
 
-assert(world.cafe);assert(world.musicPlayer);let books=0,pastries=0;world.cafe.traverse(o=>{if(o.name==='book')books++;if(o.name==='croissant')pastries++;});assert.equal(books,32);assert.equal(pastries,3);world.setTime('night',true);world.advance(2,.016);assert(world.fireLight.intensity>0);console.log('PASS: café books, pastries, music player and night fire.');
+assert(world.cafe);assert(world.musicPlayer);let books=0,pastries=0;world.cafe.traverse(o=>{if(o.name==='book')books++;if(o.name==='croissant')pastries++;});assert.equal(books,32);assert.equal(pastries,0);world.setTime('night',true);world.advance(2,.016);assert(world.fireLight.intensity>0);console.log('PASS: café books, no croissants, music player and night fire.');
 
 const winterTufts=world.scene.getObjectByName('grass through snow');
 const snowLayer=world.scene.getObjectByName('snow flurries');

@@ -39,3 +39,20 @@ Netflix and Prime Video watch parties are deferred. An external watch-party link
 - `world.mjs` contains the bed and lamp, waterfall mist, pond and downstream channel. `viewer-shell.html` contains the icons and panel.
 - After source edits, run `python3 export.py` and reload. When changing server code, restart the Node process.
 - `node check-room.mjs` tests the room API and range delivery locally. Scene and timer checks are in `npm test` after installing the project dependencies.
+
+
+## Vercel deployment: riversidepomodoro.vercel.app
+
+The public page stays on Vercel. `api/rooms.js` handles room actions and `lib/room-service.mjs` keeps shared room data in Upstash Redis, not Function memory. Browser clients exchange snapshots through short presence updates; this does not require long-lived WebSocket connections. Each room allows two people total and expires after six hours without updates. Local `npm start` still uses the existing Node server.
+
+One-time account setup:
+
+1. Open this Vercel project → Storage → connect an Upstash Redis database. Use a free plan if available; review any provider charges before accepting.
+2. Ensure Production (and Preview if desired) has `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`. The integration may use `KV_REST_API_URL` and `KV_REST_API_TOKEN`; both names are supported. Keep tokens in Vercel environment settings, never in source or chat.
+3. Deploy this repository revision. `vercel.json` builds only `public/index.html`, intentional `media/` videos and the room function. No video assets are added by the room feature.
+4. Visit `/api/rooms` on the deployed site. It must report `configured: true`, `capacity: 2`, and `transport: poll`. If configured is false, reconnect storage or add the two variables, then redeploy.
+5. Open the site in two different browser profiles. Create a room in one, share its link with the other, and test calendar, movie URL, play/pause/seek and reconnect. A third profile must receive the two-person capacity error.
+
+`node check-vercel-room.mjs` checks cross-instance synchronization and concurrent joins with an injected Redis-compatible test adapter. `node check-room.mjs` checks the original local server. Live cloud storage still requires the account setup above.
+
+Video files selected through Choose video remain local to that browser. To watch the same video together, set a direct HTTPS video URL in the room panel. The room backend stores the URL and playback position, not the recording.

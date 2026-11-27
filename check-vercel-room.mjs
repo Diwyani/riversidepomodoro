@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';
+import {createRoomService,redisStore} from './lib/room-service.mjs';
+// Independent function instances share only the storage adapter, matching Vercel cold starts.
+const values=new Map(),commands=[];
+let time=1800000000000;
+const fakeFetch=async(url,request)=>{const command=JSON.parse(request.body);commands.push(command);let result;if(command[0]==='GET')result=values.get(command[1])??null;else if(command[0]==='EVAL'){const [,script,,key,previous,next]=command;if((values.get(key)??'')===previous){values.set(key,next);result=1;}else result=0;}else throw Error('Unexpected Redis command');return {ok:true,json:async()=>({result})};};
+const store=redisStore({UPSTASH_REDIS_REST_URL:'https://test.upstash.io',UPSTASH_REDIS_REST_TOKEN:'test-only'},fakeFetch);
+const functionA=createRoomService({store,now:()=>time}),functionB=createRoomService({store,now:()=>time});
+const call=(fn,path,body)=>fn({path,body});
+const created=await call(functionA,'/api/rooms',{name:'Host'});assert.equal(created.status,201);const host=created.body,base='/api/rooms/'+host.room;
+const joins=await Promise.all([call(functionA,base+'/join',{name:'Friend A'}),call(functionB,base+'/join',{name:'Friend B'})]);assert.deepEqual(joins.map(r=>r.status).sort(),[200,409]);
+const friend=joins.find(r=>r.status===200).body;
+assert.equal(friend.state.people.length,2);assert.equal(friend.transport,'poll');assert(friend.state.people.every(person=>!('token'in person)));
+assert.equal((await call(functionB,base+'/join',{name:'Host',token:host.token})).status,200);
+assert.equal((await call(functionA,base+'/update',{token:friend.token,kind:'sky',sky:'night'})).status,403);
+assert.equal((await call(functionA,base+'/update',{token:'invalid',kind:'presence'})).status,403);
+assert.equal((await call(functionA,base+'/update',{token:host.token,kind:'source',url:'javascript:alert(1)'})).status,400);
+assert.equal((await call(functionA,base+'/update',{token:host.token,kind:'source',url:'https://example.com/movie.mp4'})).status,200);
+await call(functionA,base+'/update',{token:host.token,kind:'playback',position:12,playing:true});
+const synced=await call(functionB,base+'/update',{token:friend.token,kind:'presence',position:[1,2,3],yaw:.2,area:'Desk'});assert(synced.body.state.media.playing);assert.equal(synced.body.state.media.position,12);assert.equal(synced.body.state.cinema,true);
+await call(functionA,base+'/leave',{token:friend.token});const replacement=await call(functionB,base+'/join',{name:'Replacement'});assert.equal(replacement.status,200);assert(replacement.body.state.media.playing);
+time+=31000;const recovered=await call(functionA,base+'/join',{name:'New guest'});assert.equal(recovered.status,200);assert.equal((await call(functionB,base+'/update',{token:replacement.body.token,kind:'presence'})).status,403);
+assert.equal((await call(functionA,'/api/rooms/'+'a'.repeat(24)+'/join',{})).status,404);
+const noStorage=createRoomService({store:redisStore({})});assert.equal((await call(noStorage,'/api/rooms',{})).status,503);
+assert(commands.some(c=>c[0]==='EVAL'&&c.at(-1)==='21600'),'Room data has a six-hour TTL');
+console.log('PASS: independent Vercel instances, concurrent two-person limit, reconnect, permissions, playback sync, leave/rejoin, stale guests, TTL and missing-storage error.');

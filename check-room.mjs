@@ -63,18 +63,19 @@ try{
  await call(endpoint+'/update',{token:host.token,kind:'playback',playing:true,position:12.5});
  const playing=await guestState(s=>s.media.playing);
  assert.equal(playing.media.position,12.5);assert(playing.cinema);assert.equal(playing.sky,'fullMoon');
- const late=await call(endpoint+'/join',{name:'Late guest'});
- assert(late.state.media.playing);assert(late.state.serverTime>=late.state.media.updatedAt);
+ await call(endpoint+'/join',{name:'Third person'},409);
  const recovered=await call(endpoint+'/join',{token:host.token,name:'Host'});
  assert(recovered.host&&recovered.id===host.id);
  await call(endpoint+'/update',{token:host.token,kind:'playback',playing:false,position:19});
  assert.equal((await guestState(s=>!s.media.playing&&s.media.position===19)).media.position,19);
  await call(endpoint+'/leave',{token:guest.token});
  assert(!(await hostState(s=>!s.people.some(p=>p.name==='Friend'))).people.some(p=>p.name==='Friend'));
+ const late=await call(endpoint+'/join',{name:'Replacement guest'});
+ assert.equal(late.state.people.length,2);assert.equal(late.state.media.position,19);
  await mkdir(mediaDirectory,{recursive:true});await writeFile(fixture,'0123456789');
  const file=await fetch(origin+'/media/'+fixture.pathname.split('/').at(-1),{headers:{Range:'bytes=2-5'}});
  assert.equal(file.status,206);assert.equal(file.headers.get('content-range'),'bytes 2-5/10');assert.equal(await file.text(),'2345');
- console.log('PASS: invites, live roster, positions, host permissions, shared video commands, late join, host reconnection, leave and media seeking.');
+ console.log('PASS: invites, live roster, positions, host permissions, shared video commands, two-person limit, replacement guest, host reconnection, leave and media seeking.');
 }finally{
  await Promise.allSettled(readers.map(reader=>reader.cancel()));
  server.kill();await unlink(fixture).catch(()=>{});
