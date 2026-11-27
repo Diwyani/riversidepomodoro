@@ -1,5 +1,6 @@
 <!-- FIREFLY EXPERIENCE START -->
-<div id="firefly-walk">
+<div id="firefly-walk" aria-busy="true">
+ <div data-arrival role="status" aria-live="polite"><span>A quiet moment by the river…</span></div>
  <div class="viz-controls toolbar">
   <button class="btn icon-btn" type="button" data-sky aria-label="Dusk. Switch to night" title="Dusk · switch to night">
    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
@@ -348,6 +349,13 @@
 
 #firefly-walk [data-desk-credit]{position:absolute;top:18px;left:18px;z-index:3;padding:9px 13px;border:1px solid #c6b89b66;border-radius:8px;background:#f2e6cde8;color:#564738;font:500 13px Georgia,serif;text-decoration:none;box-shadow:0 2px 10px #231b1420;}
 #firefly-walk [data-desk-credit]:hover{text-decoration:underline;}
+
+#firefly-walk [data-arrival]{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:#e5ddcc;color:#706958;opacity:1;transition:opacity 1.15s cubic-bezier(.22,.61,.36,1);}
+#firefly-walk [data-arrival] span{font:400 16px Georgia,serif;letter-spacing:.04em;}
+#firefly-walk.scene-ready [data-arrival]{opacity:0;pointer-events:none;}
+#firefly-walk:not(.scene-ready) .control-dock,#firefly-walk:not(.scene-ready) .toolbar,#firefly-walk:not(.scene-ready) .walking-help,#firefly-walk:not(.scene-ready) [data-start-hint],#firefly-walk:not(.scene-ready) [data-mixer]{visibility:hidden;}
+#firefly-walk [data-error]{z-index:31;}
+@media(prefers-reduced-motion:reduce){#firefly-walk [data-arrival]{transition-duration:.18s;}}
 </style>
 <script type="module">
 import * as T from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
@@ -371,8 +379,8 @@ const chairShortcut=addSceneShortcut('chair','Sit in bookshelf chair','<path d="
 const bedCinemaShortcut=addSceneShortcut('bed-cinema','Watch movie from bed','<path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/>');bedCinemaShortcut.setAttribute('aria-pressed','false');
 $('[data-watch]').after(bedCinemaShortcut);
 const world=createWorld(T,textures),camera=new T.PerspectiveCamera(62,1,.04,220);camera.rotation.order='YXZ';camera.position.set(pathAt(3),heightAt(pathAt(3),3)+1.65,3);
-let riveElements=null;addRiveElements(T,world,heightAt,pathAt,__RIV__).then(r=>{riveElements=r;}).catch(e=>console.warn('Rive elements skipped:',e));
-let yaw=0,pitch=0,walking=false,detail=false,drag=null,elapsed=0,last=performance.now(),musicURL=null,musicEmbed=null;const keys=new Set(),reduced=matchMedia('(prefers-reduced-motion: reduce)');$('[data-quiet]').checked=reduced.matches;
+let riveElements=null;const riveReady=addRiveElements(T,world,heightAt,pathAt,__RIV__).then(r=>{riveElements=r;}).catch(e=>console.warn('Rive elements skipped:',e));
+let sceneRevealed=false;let yaw=0,pitch=0,walking=false,detail=false,drag=null,elapsed=0,last=performance.now(),musicURL=null,musicEmbed=null;const keys=new Set(),reduced=matchMedia('(prefers-reduced-motion: reduce)');$('[data-quiet]').checked=reduced.matches;
 function persist(){window.openai?.setWidgetState?.({modelContent:{time:sky,area:$('[data-area]').textContent},privateContent:{position:camera.position.toArray(),yaw,pitch}})?.catch(()=>{});}
 function restore(state){const m=state?.modelContent,p=state?.privateContent;if(m&&skies.includes(m.time))selectTime(m.time,true);if(p?.position?.length===3&&p.position.every(Number.isFinite)){camera.position.copy(world.move(new T.Vector3(p.position[0],0,p.position[2]),0,0));yaw=Number.isFinite(p.yaw)?p.yaw:0;pitch=Math.max(-1.1,Math.min(1.1,p.pitch||0));}}
 const skies=['evening','night','fullMoon','dawn'];
@@ -873,7 +881,7 @@ function frame(now){requestAnimationFrame(frame);const dt=Math.min((now-last)/10
  if(stairButton.title!==stairsLabel){
   stairButton.title=stairsLabel;stairButton.setAttribute('aria-label',stairsLabel);
  }
- if(cinemaView)syncCinemaFilm();updateSound();room?.advance(dt);world.setStudyActive(timer.running);world.advance(elapsed,dt,quiet);if(!quiet)riveElements?.advance(dt);const area=cinemaView?"":camera.position.y>world.hut.position.y+4.3?"Attic":areaAt(camera.position.z);if($('[data-area]').textContent!==area)$('[data-area]').textContent=area;renderer.render(world.scene,camera);if(detail){bug.animate(elapsed,0,quiet);bugRenderer.render(bugScene,bugCamera);}}
+ if(cinemaView)syncCinemaFilm();updateSound();room?.advance(dt);world.setStudyActive(timer.running);world.advance(elapsed,dt,quiet);if(!quiet)riveElements?.advance(dt);const area=cinemaView?"":camera.position.y>world.hut.position.y+4.3?"Attic":areaAt(camera.position.z);if($('[data-area]').textContent!==area)$('[data-area]').textContent=area;renderer.render(world.scene,camera);if(!sceneRevealed){sceneRevealed=true;requestAnimationFrame(()=>{root.classList.add('scene-ready');root.setAttribute('aria-busy','false');const arrival=$('[data-arrival]');arrival.addEventListener('transitionend',()=>arrival.hidden=true,{once:true});});}if(detail){bug.animate(elapsed,0,quiet);bugRenderer.render(bugScene,bugCamera);}}
 const monthPicker=$('[data-calendar-month]'),weatherPicker=$('[data-calendar-weather]');
 const calendarPanel=$('[data-calendar-panel]'),calendarToggle=$('[data-calendar-toggle]');
 // Opens in April: spring and purple lavender fields. 0 would follow the live calendar.
@@ -926,8 +934,10 @@ if(['#movie-night','#full-moon-cinema'].includes(location.hash)){
  goToScreen();
  if(location.hash==='#full-moon-cinema')selectTime('fullMoon',true);
 }
-requestAnimationFrame(frame);
+// Start revealing only after a real frame, with plant textures given time to initialize.
+await Promise.race([riveReady,new Promise(resolve=>setTimeout(resolve,1800))]);
+resize();last=performance.now();requestAnimationFrame(frame);
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();stop();error.hidden=false;error.textContent='Graphics paused. Reload to continue.';});
-}catch(e){error.hidden=false;error.textContent='The 3D view needs WebGL and an internet connection for Three.js. '+e.message;}
+}catch(e){root.setAttribute('aria-busy','false');root.classList.add('scene-ready');$('[data-arrival]').hidden=true;error.hidden=false;error.textContent='The 3D view needs WebGL and an internet connection for Three.js. '+e.message;}
 </script>
 <!-- FIREFLY EXPERIENCE END -->
