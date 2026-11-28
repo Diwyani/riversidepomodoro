@@ -1,33 +1,52 @@
-id,title,author,genre,feelings
-1,The Restaurant of Lost Recipes,Hisashi Kashiwai,,
-2,Heart Lamp,Banu Mushtaq,,
-3,The Woman Who Climbed Trees,Smriti Ravindra,,
-4,The Creative Act,Rick Rubin,,
-5,Tiny Experiments,Anne-Laure Le Cunff,,
-6,Poems 1968–2020,Nikki Giovanni,,
-7,The Year of Magical Thinking,Joan Didion,,
-8,"30,000 Years of Art",,,
-9,Hunger,Choi Jin-young,,
-10,Butter,Asako Yuzuki,,
-11,The Book of Life,J. Krishnamurti,,
-12,The Bookshop Woman,Nanako Hanada,,
-13,The Artist’s Way,Julia Cameron,,
-14,"Gods, Guns and Missionaries",Manu S. Pillai,,
-15,Good Material,Dolly Alderton,,
-16,Evenings and Weekends,Oisín McKenna,,
-17,Everything I Know About Love,Dolly Alderton,,
-18,Atlas of the Heart,Brené Brown,,
-19,The Convenience Store by the Sea,Sonoko Machida,,
-20,On Photography,Susan Sontag,,
-21,Days at the Morisaki Bookshop,Satoshi Yagisawa,,
-22,Welcome to the Hyunam-dong Bookshop,Hwang Bo-reum,,
-23,The Vegetarian,Han Kang,,
-24,The White Book,Han Kang,,
-25,Greek Lessons,Han Kang,,
-26,A Philosophy of Walking,Frédéric Gros,,
-27,Territory of Light,Yūko Tsushima,,
-28,Days at the Torunka Café,Satoshi Yagisawa,,
-29,Boulder,Eva Baltasar,,
-30,Breasts and Eggs,Mieko Kawakami,,
-31,Jazz,Toni Morrison,,
-32,Beloved,Toni Morrison,,
+id,title,author,genre,feelings,cover_color,cover_accent
+1,The Restaurant of Lost Recipes,Hisashi Kashiwai,Food fiction,"Badly translated. I usually love books around food because food is more than just calories: it holds memories and brings people together. That is what this book tried to portray, but I really did not like the translation. It felt clumsy, almost as if it had been translated word for word. I don’t know. A bad read for me. 2/10.",,
+2,Heart Lamp,Banu Mushtaq,Short stories,"It could have been better if the themes hadn’t been repeated so much. The representation of minorities and women is very important, and I understand why the book was recognised. Still, I felt the repetition was unnecessary.",,
+3,The Woman Who Climbed Trees,Smriti Ravindra,Literary fiction,"What a book! It deserves a much wider audience. I loved it so much. It made me cry and shook my whole world.
+
+The book grabs you within the first two pages. What? WTF just happened? Then you read deeper and realise: oh my God, is this about the women in my family—my chachi, mausi, bua? That gets scary.
+
+Such a good read. I will need to pick it up again when I find a little more courage.",,
+4,The Creative Act,Rick Rubin,Creativity · Nonfiction,"The simplest things, said beautifully. Basic things like attention and trees are redefined until you feel as though you are thinking about them for the first time.
+
+Rick Rubin is a great enabler of creative people. I think everyone who creates should read this once. It makes you feel understood. Creativity is a divine act.",,
+5,Tiny Experiments,Anne-Laure Le Cunff,Personal growth · Nonfiction,"Practical guidance on letting go of fear and doing things. Tiny experiments, instead of waiting until you feel ready.",#eee4cd,
+6,The Year of Magical Thinking,Joan Didion,Memoir · Grief,"I did not know this book was about grief when I picked it up. I just thought: magical thinking.
+
+How it made me cry. Small book, big cry.",,
+7,"30,000 Years of Art",,Art · Reference,"A good, encyclopaedia-like book, full of art and things to learn. Best read slowly, in a quiet space.",,
+8,Hunger,Choi Jin-young,Fiction,Ewww. Why would you eat your husband? I couldn’t finish it. Why is this so famous?,,
+9,Butter,Asako Yuzuki,Fiction,This book had a big impact on me. I have written about it and made a video about it; I can’t say everything in a few words.,,
+10,The Book of Life,J. Krishnamurti,Philosophy · Nonfiction,I don’t think it was the right time for me to read this. I will come back to it another time.,,
+11,The Bookshop Woman,Nanako Hanada,Memoir · Books,"A woman goes through big changes, meets people and recommends books depending on who they are and what they are looking for. Through books, she makes new connections and meets a lot of interesting people. I liked it.",#ee732d,
+12,The Artist’s Way,Julia Cameron,Creativity · Workbook,"A workshop in creativity that still feels relevant, even though it is from the ’90s. Two ideas from this book—morning pages and artist dates—are very famous on TikTok and YouTube. But I think the book does more than that.
+
+When it asks specific questions, you are compelled to answer and spill whatever is clogging you up. You express the feelings that have been getting in the way, and that can make you more creative.",#b9f33d,#367ad6
+13,"Gods, Guns and Missionaries",Manu S. Pillai,History · Nonfiction,"Using a big font for a history book was a good move.
+
+History books are important: they question and shake up our beliefs and help us understand where we come from. This one explores religion and how ideas and cultures have travelled through India. An interesting read, but the book is too big to carry around. Read it at home, at night.",#eee1c5,#b84136
+14,Good Material,Dolly Alderton,Fiction,"What is a breakup like in your late thirties, when all your friends are married and have children? This is funny, and it makes you want to keep reading. As I have said before, Dolly Alderton is a good writer.",#f1d244,
+15,Evenings and Weekends,Oisín McKenna,Fiction,"Soooo good. It feels like one big gossip session, with a lot of people involved. Funny, and the writing is so good. I cannot believe this is his first novel.",#ed873f,#e783ab
+16,Everything I Know About Love,Dolly Alderton,Memoir,"Dolly Alderton is a very good writer. At first, I felt disconnected; I couldn’t find myself in that urban, privileged childhood. But then it became comical, full of fun lists, reflective, honest and relatable. I like her.",,
+17,Atlas of the Heart,Brené Brown,Emotions · Nonfiction,One of the greatest privileges of being human is getting to experience so many emotions throughout a lifetime.,,
+18,The Convenience Store by the Sea,Sonoko Machida,Slice-of-life fiction,"Soft, slice-of-life reading. Again, I like books where nothing happens—but somehow, a lot happens.",,
+19,Welcome to the Hyunam-dong Bookshop,Hwang Bo-reum,Slice-of-life fiction,"A comfort book. The main character leaves her previous life behind and starts a bookshop. She reflects on her past self, asks good questions and makes small, incremental changes.
+
+There are a lot of characters, and quite a few of them are burnt out. As we move forward with less and less community, I think people will yearn for it. Books like this will only become more popular with time.",,
+20,The Vegetarian,Han Kang,Literary fiction,"I would never recommend this book to anyone. What was that?
+
+It is divided into three parts, all told from the perspectives of people close to the main character, while she—the person suffering—remains on the outside of their accounts.",,
+21,The White Book,Han Kang,Poetic prose · Grief,"I never knew that grief for someone who existed before you, for only a very brief time, could affect you so deeply that you would write these small, poem-like pieces about it.
+
+I loved it. It hit me in waves. Sad, very sad.",,
+22,Greek Lessons,Han Kang,Literary fiction,"Two people, connected through learning. Even the pages devoted to each of them feel different. The woman who cannot speak gets so much space on the page; the other person’s pages feel much more crowded with words. It is as if grief binds them both.
+
+I love the cover. Ink.",,
+23,A Philosophy of Walking,Frédéric Gros,Philosophy · Nonfiction,"A long meditation on walks, on our lives right now, and on the artists and philosophers who gave walking special importance.
+
+I had never thought that something as mundane as walking could hold so much.",,
+24,Territory of Light,Yūko Tsushima,Literary fiction,"A young, newly divorced woman is building a new life. There is so much attention to the flat she moves into and the way sunlight fills it—that is where the title comes from.
+
+The book follows her life from moving into that home to moving out of it. A small, good read.",,
+25,Days at the Torunka Café,Satoshi Yagisawa,Slice-of-life fiction,"Again, a cosy slice of life, like Morisaki. People are devouring this genre.",,
+26,Boulder,Eva Baltasar,Queer fiction,"Queer, short, well written and fast-paced. 7/10.",,
+27,Breasts and Eggs,Mieko Kawakami,Literary fiction,One more shocker. It grips you. I had never thought about breasts and womanhood in quite the way I did while reading this. Very interesting. You should read it.,,

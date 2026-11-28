@@ -15,7 +15,7 @@ const shelf=w.attic.getObjectByName('small bedroom bookshelf');let books=0;shelf
 for(const name of ['Japanese paper cafe lantern','poppy paper bedside lamp','soft green wool pile'])assert(w.scene.getObjectByName(name),name);
 console.log('PASS: continuous entrance, kitchen, books and physical stairs routes; compact titled books and new lamps/rug.');
 
-assert.equal(w.vinyls.length,0);assert(w.books.some(book=>book.userData.author==='Toni Morrison'));
+assert.equal(w.vinyls.length,0);assert.equal(w.books.length,27);for(const title of ['Poems 1968–2020','On Photography','Jazz','Beloved','Days at the Morisaki Bookshop'])assert(!w.books.some(book=>book.userData.title===title));
 assert(w.redSofa&&w.floorLamp&&w.flowerClock);
 
 assert.equal(w.studyChairs.length,1);assert.equal(w.redSofa.name,'red reading armchair');assert(!w.scene.getObjectByName('striped wool sofa throw'));assert.equal(w.deskLamp.name,'yellow table lamp');
