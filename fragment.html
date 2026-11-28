@@ -123,12 +123,11 @@
  <div data-cinema-fade aria-hidden="true"></div>
  <dialog data-book-paper aria-labelledby="book-title">
   <form method="dialog"><button class="btn" type="submit" aria-label="Close book note">×</button></form>
-  <p class="book-kicker">Little Stream Book Café</p>
+  <p class="book-kicker">Diwyani’s Bookshelf</p>
   <h2 id="book-title"></h2>
   <p data-book-author hidden></p>
-  <label class="book-notes-label" for="book-notes">Your notes</label>
-  <textarea id="book-notes" data-book-notes maxlength="20000" placeholder="Thoughts, favourite passages, little things to remember…"></textarea>
-  <p data-note-status role="status">Saved on this browser.</p>
+  <p data-book-genre hidden></p>
+  <div data-book-thoughts></div>
  </dialog>
  <div data-book-pick hidden>
   <label>Browse books <select data-book-list><option value="">Choose a book</option></select></label>
@@ -366,6 +365,20 @@
 #firefly-walk [data-book-paper] .book-notes-label{display:block;margin:22px 0 8px;font:600 14px system-ui;}
 #firefly-walk [data-book-notes]{display:block;box-sizing:border-box;width:100%;min-height:180px;resize:vertical;padding:14px;border:1px solid #ded8cb;border-radius:8px;background:#fff;color:#3d3028;font:16px/1.7 Georgia,serif;}
 #firefly-walk [data-note-status]{font:12px system-ui;color:#7d7568;min-height:1.4em;margin-bottom:0;}
+
+#firefly-walk [data-book-paper]{isolation:isolate;width:min(92vw,580px);padding:44px 42px 48px;border:0;border-radius:0;max-height:86dvh;overflow:auto;color:#264b8b;font-family:'Segoe Print','Bradley Hand','Comic Sans MS',cursive;background:linear-gradient(90deg,transparent 48.8%,#a79b7922 49.7%,#fffef5a0 50%,#a79b7920 50.3%,transparent 51.2%),repeating-linear-gradient(0deg,#fffdf2 0 31px,#e8edf16b 32px,#fffdf2 33px);clip-path:polygon(1% 1.2%,6% .5%,12% 1%,19% .3%,25% 1%,32% .5%,40% 1.2%,48% .4%,56% 1.1%,65% .3%,74% 1%,83% .5%,92% 1.2%,99% .4%,99.4% 14%,98.9% 29%,99.6% 42%,99% 55%,99.5% 72%,98.8% 87%,99.5% 99%,91% 98.7%,82% 99.5%,73% 99%,64% 99.6%,54% 98.9%,45% 99.5%,35% 98.9%,26% 99.6%,16% 99%,8% 99.5%,.5% 98.8%,1.1% 87%,.4% 75%,1% 61%,.3% 48%,1% 34%,.5% 20%);box-shadow:0 18px 55px #11182750;transform-origin:50% 50%;}
+#firefly-walk [data-book-paper][open]{animation:bookshelf-unfold .4s cubic-bezier(.22,.61,.36,1) both;}
+#firefly-walk [data-book-paper] .book-kicker{font:400 13px Georgia,serif;letter-spacing:.06em;color:#566987;margin:0 0 24px;}
+#firefly-walk [data-book-paper] h2{font:600 clamp(25px,4vw,34px)/1.35 'Segoe Print','Bradley Hand','Comic Sans MS',cursive;color:#244886;margin:0 0 9px;}
+#firefly-walk [data-book-author]{font-size:17px;margin:0 0 6px;color:#35588c;}
+#firefly-walk [data-book-genre]{font:12px Georgia,serif;letter-spacing:.06em;color:#647797;margin:0 0 26px;}
+#firefly-walk [data-book-thoughts]{font-size:19px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:28px;min-height:130px;}
+#firefly-walk [data-book-paper] form button{color:#3f5b88;background:transparent;border:0;}
+@keyframes bookshelf-unfold{from{opacity:0;transform:perspective(1000px) rotateY(-14deg) rotateZ(-1deg);}to{opacity:1;transform:perspective(1000px) rotateY(0) rotateZ(0);}}
+@media(prefers-reduced-motion:reduce){#firefly-walk [data-book-paper][open]{animation:bookshelf-fade .15s ease both;}}
+@keyframes bookshelf-fade{from{opacity:0;}to{opacity:1;}}
+#firefly-walk:has([data-quiet]:checked) [data-book-paper][open]{animation:bookshelf-fade .15s ease both;}
+@media(max-width:480px){#firefly-walk [data-book-paper]{padding:38px 26px 34px;}}
 </style>
 <script type="module">
 import * as T from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
@@ -2721,17 +2734,16 @@ function nearShelf(){
 }
 
 for(const book of world.books){const option=new Option(book.userData.title,book.userData.title);bookList.add(option);}
-let activeBookNote='',noteSaveTimer;
-const noteField=$('[data-book-notes]'),noteStatus=$('[data-note-status]');
-function saveBookNote(){clearTimeout(noteSaveTimer);if(!activeBookNote)return;try{localStorage.setItem('riverside:book-note:'+activeBookNote,noteField.value);noteStatus.textContent='Saved on this browser.';}catch{noteStatus.textContent='Could not save here. Copy your notes before closing.';}}
-noteField.addEventListener('input',()=>{noteStatus.textContent='Saving…';clearTimeout(noteSaveTimer);noteSaveTimer=setTimeout(saveBookNote,350);});
-paper.addEventListener('close',saveBookNote);window.addEventListener('pagehide',saveBookNote);
+const bookAnnotations={"The Restaurant of Lost Recipes": {"genre": "", "feelings": ""}, "Heart Lamp": {"genre": "", "feelings": ""}, "The Woman Who Climbed Trees": {"genre": "", "feelings": ""}, "The Creative Act": {"genre": "", "feelings": ""}, "Tiny Experiments": {"genre": "", "feelings": ""}, "Poems 1968\u20132020": {"genre": "", "feelings": ""}, "The Year of Magical Thinking": {"genre": "", "feelings": ""}, "30,000 Years of Art": {"genre": "", "feelings": ""}, "Hunger": {"genre": "", "feelings": ""}, "Butter": {"genre": "", "feelings": ""}, "The Book of Life": {"genre": "", "feelings": ""}, "The Bookshop Woman": {"genre": "", "feelings": ""}, "The Artist\u2019s Way": {"genre": "", "feelings": ""}, "Gods, Guns and Missionaries": {"genre": "", "feelings": ""}, "Good Material": {"genre": "", "feelings": ""}, "Evenings and Weekends": {"genre": "", "feelings": ""}, "Everything I Know About Love": {"genre": "", "feelings": ""}, "Atlas of the Heart": {"genre": "", "feelings": ""}, "The Convenience Store by the Sea": {"genre": "", "feelings": ""}, "On Photography": {"genre": "", "feelings": ""}, "Days at the Morisaki Bookshop": {"genre": "", "feelings": ""}, "Welcome to the Hyunam-dong Bookshop": {"genre": "", "feelings": ""}, "The Vegetarian": {"genre": "", "feelings": ""}, "The White Book": {"genre": "", "feelings": ""}, "Greek Lessons": {"genre": "", "feelings": ""}, "A Philosophy of Walking": {"genre": "", "feelings": ""}, "Territory of Light": {"genre": "", "feelings": ""}, "Days at the Torunka Caf\u00e9": {"genre": "", "feelings": ""}, "Boulder": {"genre": "", "feelings": ""}, "Breasts and Eggs": {"genre": "", "feelings": ""}, "Jazz": {"genre": "", "feelings": ""}, "Beloved": {"genre": "", "feelings": ""}};
 function openBook(title){
  if(paper.open)return;
  const entry=world.books.find(book=>book.userData.title===title)?.userData;
  if(!entry)return;
- stop();$('#book-title').textContent=title;activeBookNote=title;try{noteField.value=localStorage.getItem('riverside:book-note:'+title)||'';noteStatus.textContent='Saved on this browser.';}catch{noteField.value='';noteStatus.textContent='Notes cannot be saved in this browser.';}
+ stop();$('#book-title').textContent=title;
  const author=$('[data-book-author]');author.textContent=entry.author;author.hidden=!entry.author;
+ const annotation=bookAnnotations[title]||{};
+ const genre=$('[data-book-genre]');genre.textContent=annotation.genre||'';genre.hidden=!genre.textContent;
+ $('[data-book-thoughts]').textContent=annotation.feelings||'Notes coming soon.';
  paper.showModal();
  initSound();
  const length=Math.floor(audioContext.sampleRate*.27),buffer=audioContext.createBuffer(1,length,audioContext.sampleRate);

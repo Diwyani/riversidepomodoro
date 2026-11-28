@@ -48,3 +48,8 @@ The editable book list is `books.csv`: keep the `id`, `title`, and `author` head
 A server is the program that keeps shared rooms and video timing working. For this computer, run `npm start` in `/Users/guru/Documents/Little-Stream`, keep that Terminal open, and visit http://127.0.0.1:8080/. A localhost invite only works on this computer. Friends online need the Node server deployed at a public HTTPS address; a static page alone cannot create rooms. `HOSTING.md` explains deployment.
 
 Calendar fades after five idle seconds; pointer and keyboard activity restarts the timer. Movie opens in the right chair; Left chair, Right chair, and Watch from bed switch viewpoints. Space stands and starts walking. The chair shortcut now uses the indoor bookshelf armchair.
+
+
+### Diwyani’s published bookshelf notes
+
+`books.csv` now has `id,title,author,genre,feelings` columns. Write your own book thoughts in `feelings`; quote a cell when it contains commas or multiple lines. Run `python3 rename-books.py` if changing titles/authors, then `python3 export.py` to include the published notes in the page. The paper is read-only for visitors. Previous personal browser notes are not read or published. Empty entries display “Notes coming soon.”
