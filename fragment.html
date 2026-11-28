@@ -1015,12 +1015,7 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
   tassel.rotation.x=.05;
  }
 
- const nightstand=new T.Group();nightstand.name='bedside table touching bed';nightstand.position.set(bedX-.98,loftHeight,bedZ-.55);attic.add(nightstand);
- box(nightstand,.74,.065,.65,0,.49,0,timber);box(nightstand,.65,.15,.54,0,.375,0,timber);box(nightstand,.11,.025,.035,0,.38,.29,brassMatPlaceholder());
- function brassMatPlaceholder(){return new T.MeshStandardMaterial({color:0xae945f,metalness:.6,roughness:.45});}
- for(const x of [-.29,.29])for(const z of [-.24,.24])box(nightstand,.045,.30,.045,x,.15,z,timber);
- for(const [x,r,h,color] of [[-.16,.055,.065,0xe6d9c9],[.04,.045,.10,0xb5c4ae]]){const jar=new T.Mesh(new T.CylinderGeometry(r,r,h,20),new T.MeshStandardMaterial({color,roughness:.35}));jar.name='night cream jar';jar.position.set(x,.525+h/2,0);nightstand.add(jar);const lid=new T.Mesh(new T.CylinderGeometry(r*1.04,r*1.04,.018,20),brassMatPlaceholder());lid.position.set(x,.534+h,0);nightstand.add(lid);}
- const bedroomLamp=new T.Group();bedroomLamp.name='poppy paper bedside lamp';bedroomLamp.position.set(-.85,loftHeight+.5675,-2.63);attic.add(bedroomLamp);
+ const bedroomLamp=new T.Group();bedroomLamp.name='poppy paper bedside lamp';bedroomLamp.position.set(-.85,loftHeight+.5675,backWall+.27);attic.add(bedroomLamp);
  let poppyTexture=null;
  if(typeof document!=='undefined'){
   const c=document.createElement('canvas');c.width=c.height=384;const g=c.getContext('2d');g.fillStyle='#e4a545';g.fillRect(0,0,384,384);
@@ -1045,10 +1040,10 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
 
  // Compact bedroom furniture leaves the west stair opening and landing clear.
  const bedroomWood=new T.MeshStandardMaterial({map:textures.barkSoft||textures.bark,color:0xa68a70,roughness:.88});
- const bedroomBookshelf=new T.Group();bedroomBookshelf.name='small bedroom bookshelf';bedroomBookshelf.position.set(-.85,loftHeight,-2.63);attic.add(bedroomBookshelf);
- box(bedroomBookshelf,.55,.55,.025,0,.285,-.12,bedroomWood);
- for(const x of [-.265,.265])box(bedroomBookshelf,.025,.56,.26,x,.28,0,bedroomWood);
- for(const y of [.035,.295,.555])box(bedroomBookshelf,.55,.025,.28,0,y,0,bedroomWood);
+ const bedroomBookshelf=new T.Group();bedroomBookshelf.name='small bedroom bookshelf';bedroomBookshelf.position.set(-.85,loftHeight,backWall+.27);attic.add(bedroomBookshelf);
+ box(bedroomBookshelf,.98,.55,.025,0,.285,-.23,bedroomWood);
+ for(const x of [-.4775,.4775])box(bedroomBookshelf,.025,.56,.48,x,.28,0,bedroomWood);
+ for(const y of [.035,.295,.555])box(bedroomBookshelf,.98,.025,.50,0,y,0,bedroomWood);
  const bedroomTable=new T.Group();bedroomTable.name='bedroom writing table';bedroomTable.position.set(-1.29,loftHeight,-.48);attic.add(bedroomTable);
  box(bedroomTable,.80,.055,.45,0,.72,0,bedroomWood);
  for(const x of [-.33,.33])for(const z of [-.16,.16])box(bedroomTable,.043,.70,.043,x,.35,z,bedroomWood);
