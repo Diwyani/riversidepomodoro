@@ -758,6 +758,7 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
  const bookTitles=['The Restaurant of Lost Recipes','Heart Lamp','The Woman Who Climbed Trees','The Creative Act','Tiny Experiments','Poems 1968–2020','The Year of Magical Thinking','30,000 Years of Art','Hunger','Butter','The Book of Life','The Bookshop Woman','The Artist’s Way','Gods, Guns and Missionaries','Good Material','Evenings and Weekends','Everything I Know About Love','Atlas of the Heart','The Convenience Store by the Sea','On Photography','Days at the Morisaki Bookshop','Welcome to the Hyunam-dong Bookshop','The Vegetarian','The White Book','Greek Lessons','A Philosophy of Walking','Territory of Light','Days at the Torunka Café','Boulder','Breasts and Eggs','Jazz','Beloved'];
  const bookAuthors=['Hisashi Kashiwai','Banu Mushtaq','Smriti Ravindra','Rick Rubin','Anne-Laure Le Cunff','Nikki Giovanni','Joan Didion','','Choi Jin-young','Asako Yuzuki','J. Krishnamurti','Nanako Hanada','Julia Cameron','Manu S. Pillai','Dolly Alderton','Oisín McKenna','Dolly Alderton','Brené Brown','Sonoko Machida','Susan Sontag','Satoshi Yagisawa','Hwang Bo-reum','Han Kang','Han Kang','Han Kang','Frédéric Gros','Yūko Tsushima','Satoshi Yagisawa','Eva Baltasar','Mieko Kawakami','Toni Morrison','Toni Morrison'];
  const books=[];
+ const bookPages=new T.MeshStandardMaterial({color:0xfffdf5,roughness:.95});
  const stackHeights=Array(Math.ceil(bookTitles.length/6)).fill(0);
  for(let i=0;i<bookTitles.length;i++){
   const stack=Math.floor(i/6),row=stack>=3?1:0;
@@ -766,10 +767,17 @@ for(let i=0;i<32;i++){const z=22-rng()*69,river=riverAt(z),side=rng()<.5?-1:1,x=
   const color=bookColors[(i+Math.floor(i/4))%bookColors.length];
   const y=.524+row*.65+stackHeights[stack]+thickness/2;
   stackHeights[stack]+=thickness+.003;
-  const book=box(cafeBookcase,width,thickness,length,-1.63+(rng()-.5)*.085,y,z,new T.MeshLambertMaterial({color}));
+  const book=box(cafeBookcase,width*.94,thickness*.80,length*.96,-1.63+(rng()-.5)*.085,y,z,bookPages);
   book.name='book';book.userData.title=bookTitles[i];book.userData.author=bookAuthors[i];book.rotation.y=(rng()-.5)*.40;
   book.rotation.z=(rng()-.5)*.06;books.push(book);
-  box(book,width*.91,thickness*.64,length*.96,-width*.04,0,0,creamMat);
+  const coverMat=new T.MeshStandardMaterial({color,roughness:.8});
+  for(const side of [-1,1])box(book,width,thickness*.10,length,0,side*thickness*.45,0,coverMat);
+  box(book,.012,thickness,length,width/2-.006,0,0,coverMat);
+  const accent=new T.MeshStandardMaterial({color:i%2?0xeadcb7:0x5a624e,roughness:.85});
+  if(i%3===0){for(const z of [-length*.36,length*.36])box(book,width*.82,.0015,.010,0,thickness*.506,z,accent);}
+  else if(i%3===1)box(book,width*.80,.0015,length*.24,0,thickness*.506,-length*.15,accent);
+  else {const badge=new T.Mesh(new T.CircleGeometry(width*.15,16),accent);badge.rotation.x=-Math.PI/2;badge.position.set(0,thickness*.506,0);book.add(badge);}
+  for(const side of [-1,1])for(let line=0;line<3;line++)box(book,.001,thickness*.012,length*.91,side*width*.471,(line-1)*thickness*.18,0,new T.MeshBasicMaterial({color:0xdedbd1}));
   if(typeof document==='undefined')continue;
   const spineCanvas=document.createElement('canvas');spineCanvas.width=512;spineCanvas.height=72;
   const ctx=spineCanvas.getContext('2d');ctx.fillStyle='#'+new T.Color(color).getHexString();ctx.fillRect(0,0,512,72);

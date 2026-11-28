@@ -1,6 +1,7 @@
 import {createRoomService} from '../lib/room-service.mjs';
 const handle=createRoomService();
 export default async function rooms(req,res){
+ if(process.env.ROOMS_ENABLED!=='true'){res.statusCode=410;res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify({paused:true,error:'Shared rooms are paused. Refresh for solo mode.'}));return;}
  res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');
  const url=new URL(req.url,'https://riverside.invalid');
  const configured=Boolean((process.env.UPSTASH_REDIS_REST_URL||process.env.KV_REST_API_URL)&&(process.env.UPSTASH_REDIS_REST_TOKEN||process.env.KV_REST_API_TOKEN));

@@ -43,7 +43,7 @@ export async function addRiveElements(T,world,heightAt,pathAt,rivBase64){
  }
 
  const lavender=player('Lavender',300,360);
- const pond=player('Pond Life',512,512);
+
 
  // Lavender: 300 x 360 artboard -> 1.25 m x 1.5 m (smaller hid in the grass), in the meadow either side of the path.
  // 170 clumps across the meadow and woodland grass: the first 40 show from May to November, all 170 in April when the field is covered.
@@ -56,18 +56,11 @@ export async function addRiveElements(T,world,heightAt,pathAt,rivBase64){
  // Keep the meadow purple only; no white blooming flower artboard.
  const flowerGroup=new T.Group();flowerGroup.name='rive blooming flowers';
 
- // Pond life: a disc just above the existing pond water, so the koi and ripples sit on its surface.
- const pool=world.pool,radius=pool.geometry.parameters.radius*.96;
- const disc=new T.Mesh(new T.CircleGeometry(radius,64),new T.MeshLambertMaterial({map:pond.texture,transparent:true,depthWrite:false}));
- disc.name='rive pond life';disc.rotation.x=-Math.PI/2;disc.position.copy(pool.position);disc.position.y+=.012;disc.renderOrder=2;
- world.root.add(disc);
-
  return{
-  lavender:lavenderGroup,flowers:flowerGroup,pond:disc,
+  lavender:lavenderGroup,flowers:flowerGroup,pond:null,
   // Call once per frame with seconds since the last frame.
   advance(dt){
    // Lavender disappears under snow; white flowers stay absent.
-   disc.visible=world.freezeAmount<.98;disc.material.opacity=1-world.freezeAmount;
    lavenderGroup.visible=world.seasonalLife.bloom>.005;
    flowerGroup.visible=false;
    const growth=world.seasonalLife.bloom;

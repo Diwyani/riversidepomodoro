@@ -56,3 +56,5 @@ One-time account setup:
 `node check-vercel-room.mjs` checks cross-instance synchronization and concurrent joins with an injected Redis-compatible test adapter. `node check-room.mjs` checks the original local server. Live cloud storage still requires the account setup above.
 
 Video files selected through Choose video remain local to that browser. To watch the same video together, set a direct HTTPS video URL in the room panel. The room backend stores the URL and playback position, not the recording.
+
+As of 28 November, shared rooms are paused. The deployed API returns 410 without contacting Redis unless `ROOMS_ENABLED=true`. Keep it disabled during solo mode. Existing room records expire through their own six-hour TTL; no other database keys are changed.
